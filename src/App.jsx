@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { SKILLS, getAllDiagnosticQuestions, getPracticeQuestionsForSkill } from './content/skills.js';
 
 function cls(...xs) {
   return xs.filter(Boolean).join(' ');
@@ -12,82 +13,10 @@ function Badge({ children }) {
   );
 }
 
-const SKILLS = [
-  {
-    id: 'mole',
-    name: '莫耳與粒子數（NA）',
-    blurb: 'n、N、NA 的互換；粒子數概念',
-    questions: [
-      {
-        id: 'mole_q1',
-        kind: 'mc',
-        stem: '1 mol 的粒子數約等於多少？',
-        choices: ['6.02×10^23', '3.01×10^23', '1.00×10^23', '9.81×10^23'],
-        answer: 0,
-        explanation: '阿伏加德羅常數 NA ≈ 6.02×10^23 mol⁻¹。'
-      },
-      {
-        id: 'mole_q2',
-        kind: 'mc',
-        stem: '0.50 mol 的 CO2 分子數約為多少？',
-        choices: ['3.01×10^23', '6.02×10^23', '1.20×10^24', '2.00×10^23'],
-        answer: 0,
-        explanation: 'N = n·NA = 0.50×6.02×10^23 = 3.01×10^23。'
-      }
-    ]
-  },
-  {
-    id: 'molar-mass',
-    name: '分子量/式量與化學式計算',
-    blurb: '由化學式算 Mr；常見式量',
-    questions: [
-      {
-        id: 'mm_q1',
-        kind: 'mc',
-        stem: 'H2O 的相對分子量 Mr 為？(H=1, O=16)',
-        choices: ['17', '18', '16', '20'],
-        answer: 1,
-        explanation: 'Mr = 2×1 + 16 = 18。'
-      },
-      {
-        id: 'mm_q2',
-        kind: 'mc',
-        stem: 'CaCO3 的式量為？(Ca=40, C=12, O=16)',
-        choices: ['100', '96', '104', '112'],
-        answer: 0,
-        explanation: '40 + 12 + 3×16 = 100。'
-      }
-    ]
-  },
-  {
-    id: 'unit-sigfig',
-    name: '單位換算與有效數字（基礎）',
-    blurb: 'g↔kg；mL↔L；運算後有效數字',
-    questions: [
-      {
-        id: 'u_q1',
-        kind: 'mc',
-        stem: '250 mL 等於多少 L？',
-        choices: ['0.25 L', '2.5 L', '0.025 L', '25 L'],
-        answer: 0,
-        explanation: '1 L = 1000 mL，所以 250 mL = 0.250 L。'
-      },
-      {
-        id: 'u_q2',
-        kind: 'mc',
-        stem: '0.00340 有幾位有效數字？',
-        choices: ['2', '3', '4', '5'],
-        answer: 1,
-        explanation: '前導 0 不算，有效數字為 3（3、4、0）。'
-      }
-    ]
-  }
-];
-
 function computeMastery(skills, answersByQid) {
   const perSkill = {};
   for (const s of skills) {
-    const qs = s.questions || [];
+    const qs = s.diagnostic || [];
     if (qs.length === 0) {
       perSkill[s.id] = { correct: 0, total: 0, mastery: 0 };
       continue;
@@ -126,7 +55,7 @@ export default function App() {
   const [plan, setPlan] = useState([]); // skillIds
   const [dayIndex, setDayIndex] = useState(0);
 
-  const allQuestions = useMemo(() => SKILLS.flatMap((s) => s.questions.map((q) => ({ ...q, skillId: s.id }))), []);
+  const allQuestions = useMemo(() => getAllDiagnosticQuestions(), []);
 
   const perSkill = useMemo(() => computeMastery(SKILLS, answers), [answers]);
   const weakTop3 = useMemo(() => {
@@ -377,10 +306,12 @@ export default function App() {
                   MVP Demo：暫用診斷題當練習題（之後每技能點會有 10 題練習）。
                 </div>
                 <div className="mt-3 grid gap-2">
-                  {(currentSkill?.questions || []).map((q) => (
+                  {getPracticeQuestionsForSkill(currentSkill?.id || '').map((q) => (
                     <div key={q.id} className="rounded-xl border border-white/10 bg-black/10 p-4">
                       <div className="text-sm font-semibold text-white/90">{q.stem}</div>
-                      <div className="mt-2 text-xs text-white/55">答案：{String.fromCharCode(65 + q.answer)} · {q.explanation}</div>
+                      <div className="mt-2 text-xs text-white/55">
+                        答案：{String.fromCharCode(65 + q.answer)} · {q.explanation}
+                      </div>
                     </div>
                   ))}
                 </div>
