@@ -1,6 +1,27 @@
 import { useMemo, useState } from 'react';
 import { SKILLS, getAllDiagnosticQuestions, getPracticeQuestionsForSkill } from './content/skills.js';
 
+// eslint-disable-next-line no-undef
+const BUILD_TIME = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '';
+
+function formatBuildTime(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    const fmt = new Intl.DateTimeFormat('zh-TW', {
+      timeZone: 'Asia/Taipei',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    return fmt.format(d);
+  } catch {
+    return String(iso);
+  }
+}
+
 function cls(...xs) {
   return xs.filter(Boolean).join(' ');
 }
@@ -88,6 +109,8 @@ export default function App() {
   function goTodayTask() {
     setView('task');
   }
+
+  const buildLabel = useMemo(() => formatBuildTime(BUILD_TIME), []);
 
   return (
     <div className="min-h-screen">
@@ -343,6 +366,12 @@ export default function App() {
           設計原則：先做出「診斷 → 路徑 → 每日任務 → 回測」閉環，再逐步擴題庫與錯因分析。
         </footer>
       </div>
+
+      {buildLabel ? (
+        <div className="fixed bottom-3 right-3 z-50 rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[11px] text-white/65 backdrop-blur">
+          最後部署：{buildLabel}
+        </div>
+      ) : null}
     </div>
   );
 }
