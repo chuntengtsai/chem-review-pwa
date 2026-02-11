@@ -1159,7 +1159,7 @@ export default function App() {
     return true;
   }
 
-  function importProgress() {
+  function importProgressViaPrompt() {
     const raw = window.prompt('貼上先前匯出的進度 JSON（會覆蓋目前進度）');
     if (!raw) return;
 
@@ -1169,6 +1169,28 @@ export default function App() {
     const parsed = safeParse(raw, null);
     const ok = applyImportedProgress(parsed);
     if (ok) window.alert('已匯入進度。');
+  }
+
+  async function importProgressFromClipboard() {
+    // True “from clipboard” import when permissions allow; fall back to prompt.
+    try {
+      const text = await navigator?.clipboard?.readText?.();
+      if (!text) {
+        importProgressViaPrompt();
+        return;
+      }
+
+      const confirmOverwrite = window.confirm('要用剪貼簿的進度覆蓋目前進度嗎？（此操作無法復原）');
+      if (!confirmOverwrite) return;
+
+      const parsed = safeParse(text, null);
+      const ok = applyImportedProgress(parsed);
+      if (ok) window.alert('已從剪貼簿匯入進度。');
+      else window.alert('匯入失敗：剪貼簿內容看起來不是有效的進度 JSON。');
+    } catch {
+      // Permission denied / unsupported browser.
+      importProgressViaPrompt();
+    }
   }
 
   function triggerImportFile() {
@@ -1334,7 +1356,7 @@ export default function App() {
                       <button
                         className="rounded-lg border border-amber-300/20 bg-black/10 px-4 py-2 text-sm text-amber-50/90 hover:bg-black/20"
                         type="button"
-                        onClick={importProgress}
+                        onClick={importProgressFromClipboard}
                       >
                         從剪貼簿匯入
                       </button>
@@ -1456,8 +1478,8 @@ export default function App() {
                       <button
                         className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
                         type="button"
-                        onClick={importProgress}
-                        title="貼上 JSON 匯入進度（會覆蓋目前進度）"
+                        onClick={importProgressFromClipboard}
+                        title="從剪貼簿讀取 JSON 匯入進度（會覆蓋目前進度；若不支援會改用手動貼上）"
                       >
                         匯入進度
                       </button>
@@ -1787,8 +1809,8 @@ export default function App() {
                     <button
                       className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
                       type="button"
-                      onClick={importProgress}
-                      title="貼上 JSON 匯入進度（會覆蓋目前進度）"
+                      onClick={importProgressFromClipboard}
+                      title="從剪貼簿讀取 JSON 匯入進度（會覆蓋目前進度；若不支援會改用手動貼上）"
                     >
                       匯入進度
                     </button>
