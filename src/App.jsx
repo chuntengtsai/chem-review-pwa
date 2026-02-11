@@ -774,6 +774,11 @@ export default function App() {
   }, [view, currentQ, answers, diagIndex, allQuestions.length, chooseDiagnosticAnswer, submitDiagnostic, showShortcuts]);
 
   function goTodayTask() {
+    // If there is a known next incomplete day, prefer jumping there.
+    // This avoids landing on an already-completed day (common after users review past days).
+    if (nextIncompleteDay !== null && typeof nextIncompleteDay === 'number') {
+      setDayIndex(nextIncompleteDay);
+    }
     setView('task');
   }
 
@@ -1239,7 +1244,8 @@ export default function App() {
                       <button
                         className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
                         type="button"
-                        onClick={() => setView('task')}
+                        onClick={goTodayTask}
+                        title={nextIncompleteDay !== null ? `預設跳到下一個未完成：Day ${nextIncompleteDay + 1}` : undefined}
                       >
                         進入今日任務
                       </button>
