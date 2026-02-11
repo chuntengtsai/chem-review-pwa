@@ -283,6 +283,9 @@ export default function App() {
   const [offlineReady, setOfflineReady] = useState(false);
   const updateSWRef = useRef(null);
 
+  // Tiny QoL: allow copying version/build info (useful for bug reports)
+  const [buildInfoCopied, setBuildInfoCopied] = useState(false);
+
   // Network status (useful for PWA/offline usage)
   const [isOnline, setIsOnline] = useState(() => {
     try {
@@ -1857,11 +1860,36 @@ export default function App() {
         </div>
       ) : null}
 
+      {buildInfoCopied ? (
+        <div
+          className="fixed bottom-12 right-3 z-50 rounded-full border border-emerald-300/20 bg-emerald-500/10 px-3 py-1 text-[11px] text-emerald-50/90 backdrop-blur"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          已複製版本資訊
+        </div>
+      ) : null}
+
       {buildLabel ? (
-        <div className="fixed bottom-3 right-3 z-40 rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[11px] text-white/65 backdrop-blur">
+        <button
+          type="button"
+          className="fixed bottom-3 right-3 z-40 rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[11px] text-white/65 backdrop-blur hover:bg-black/45"
+          title="點一下複製版本/部署時間（方便回報問題）"
+          onClick={async () => {
+            const text = `最後部署：${buildLabel}${APP_VERSION ? ` · v${APP_VERSION}` : ''}`;
+            const ok = await copyToClipboard(text);
+            if (ok) {
+              setBuildInfoCopied(true);
+              window.setTimeout?.(() => setBuildInfoCopied(false), 2000);
+            } else {
+              window.alert('你的瀏覽器不允許自動複製，請手動複製版本資訊。');
+            }
+          }}
+        >
           最後部署：{buildLabel}
           {APP_VERSION ? ` · v${APP_VERSION}` : ''}
-        </div>
+        </button>
       ) : null}
     </div>
   );
