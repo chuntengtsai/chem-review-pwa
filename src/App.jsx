@@ -381,6 +381,15 @@ export default function App() {
   }
 
   // persist state (debounced to reduce synchronous localStorage churn on mobile)
+  const lastPersistPayloadRef = useRef(null);
+
+  const persistNow = useCallback(() => {
+    const payload = lastPersistPayloadRef.current;
+    if (!payload) return;
+    storageSet(STORAGE_KEY, JSON.stringify(payload));
+    setSavedAt(payload.savedAt);
+  }, []);
+
   useEffect(() => {
     if (skipNextPersistRef.current) {
       skipNextPersistRef.current = false;
@@ -397,15 +406,36 @@ export default function App() {
       savedAt: new Date().toISOString()
     };
 
+    lastPersistPayloadRef.current = payload;
+
     const t = window.setTimeout?.(() => {
-      storageSet(STORAGE_KEY, JSON.stringify(payload));
-      setSavedAt(payload.savedAt);
+      persistNow();
     }, 250);
 
     return () => {
       if (t) window.clearTimeout?.(t);
     };
-  }, [plan, dayIndex, answers, dayProgress, revealed, autoNext]);
+  }, [plan, dayIndex, answers, dayProgress, revealed, autoNext, persistNow]);
+
+  // If the page is backgrounded/closed before the debounce fires (common on mobile),
+  // flush the latest state so progress isn't lost.
+  useEffect(() => {
+    function onVisibilityChange() {
+      if (document.visibilityState === 'hidden') persistNow();
+    }
+
+    function onPageHide() {
+      persistNow();
+    }
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('pagehide', onPageHide);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('pagehide', onPageHide);
+    };
+  }, [persistNow]);
 
   const allQuestions = useMemo(() => getAllDiagnosticQuestions(), []);
 
