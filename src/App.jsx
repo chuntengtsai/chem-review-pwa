@@ -234,6 +234,7 @@ export default function App() {
 
   // localStorage might be disabled (Safari private mode / strict privacy settings).
   // Track whether we can actually persist so we can warn the user.
+  // Default to true but probe on mount to give immediate feedback.
   const [storageWritable, setStorageWritable] = useState(true);
 
   // practice: revealed answers per question id
@@ -305,6 +306,17 @@ export default function App() {
   });
 
   useEffect(() => {
+    // Probe storage availability early so we can warn immediately.
+    // Some environments (e.g., Safari private mode) throw on localStorage writes.
+    try {
+      const probeKey = `${STORAGE_KEY}.__probe`;
+      const ok = storageSet(probeKey, '1');
+      if (ok) storageRemove(probeKey);
+      setStorageWritable(ok);
+    } catch {
+      setStorageWritable(false);
+    }
+
     function updateStandalone() {
       try {
         setIsStandalone(Boolean(window?.navigator?.standalone) || window?.matchMedia?.('(display-mode: standalone)')?.matches);
