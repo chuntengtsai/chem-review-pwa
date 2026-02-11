@@ -482,6 +482,43 @@ export default function App() {
     setView('task');
   }
 
+  function buildShareSummary() {
+    const lines = [];
+    lines.push('高一化學覆習（診斷 → 補洞）進度摘要');
+    lines.push(`匯出時間：${new Date().toISOString()}`);
+
+    if (!plan?.length) {
+      lines.push('尚未產生 7 日路徑（請先完成診斷）。');
+      return lines.join('\n');
+    }
+
+    const ranked = Object.entries(perSkill)
+      .map(([skillId, v]) => ({ skillId, mastery: v.mastery, correct: v.correct, total: v.total }))
+      .sort((a, b) => a.mastery - b.mastery);
+
+    const topWeak = ranked.slice(0, 3);
+    lines.push('');
+    lines.push('弱點 Top 3：');
+    for (const w of topWeak) {
+      const s = SKILLS.find((x) => x.id === w.skillId);
+      lines.push(`- ${s?.name || w.skillId}: ${w.mastery}%（${w.correct}/${w.total}）`);
+    }
+
+    lines.push('');
+    lines.push(`7 日路徑進度：已完成 ${completedDays}/${plan.length} 天`);
+    lines.push('路徑：');
+    for (let i = 0; i < plan.length; i++) {
+      const sid = plan[i];
+      const s = SKILLS.find((x) => x.id === sid);
+      const p = dayProgress?.[i] || {};
+      const done = Boolean(p.conceptDone && p.practiceDone);
+      const tag = done ? '✅' : i === dayIndex ? '🟦' : '⬜';
+      lines.push(`- Day ${i + 1}: ${s?.name || sid} ${tag}`);
+    }
+
+    return lines.join('\n');
+  }
+
   async function exportProgress() {
     const payload = {
       version: 1,
@@ -499,6 +536,16 @@ export default function App() {
       window.prompt('你的瀏覽器不允許自動複製。請手動複製以下文字：', text);
     } else {
       window.alert('已複製進度 JSON 到剪貼簿。');
+    }
+  }
+
+  async function exportShareSummary() {
+    const text = buildShareSummary();
+    const ok = await copyToClipboard(text);
+    if (!ok) {
+      window.prompt('你的瀏覽器不允許自動複製。請手動複製以下文字：', text);
+    } else {
+      window.alert('已複製摘要到剪貼簿。');
     }
   }
 
@@ -657,6 +704,14 @@ export default function App() {
                         onClick={() => setView('task')}
                       >
                         進入今日任務
+                      </button>
+                      <button
+                        className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
+                        type="button"
+                        onClick={exportShareSummary}
+                        title="把弱點 Top 3 + 7 日路徑摘要複製到剪貼簿（可分享給老師/同學）"
+                      >
+                        匯出摘要
                       </button>
                       <button
                         className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
