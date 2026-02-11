@@ -3,6 +3,8 @@ import { SKILLS, getAllDiagnosticQuestions, getPracticeQuestionsForSkill } from 
 
 // eslint-disable-next-line no-undef
 const BUILD_TIME = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '';
+// eslint-disable-next-line no-undef
+const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '';
 
 function formatBuildTime(iso) {
   if (!iso) return '';
@@ -540,6 +542,7 @@ export default function App() {
     lines.push(`匯出時間（台北）：${formatLocalTime(new Date().toISOString())}`);
     const deployedAt = formatBuildTime(BUILD_TIME);
     if (deployedAt) lines.push(`最後部署：${deployedAt}`);
+    if (APP_VERSION) lines.push(`版本：v${APP_VERSION}`);
 
     if (!plan?.length) {
       lines.push('尚未產生 7 日路徑（請先完成診斷）。');
@@ -589,6 +592,8 @@ export default function App() {
     const payload = {
       version: 1,
       exportedAt: new Date().toISOString(),
+      appVersion: APP_VERSION || undefined,
+      buildTime: BUILD_TIME || undefined,
       plan,
       dayIndex,
       answers,
