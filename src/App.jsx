@@ -514,6 +514,20 @@ export default function App() {
     setDiagIndex(firstUnanswered >= 0 ? firstUnanswered : 0);
   }
 
+  function restartDiagnosticFlow() {
+    const ok = window.confirm('要重新做一次診斷嗎？（會清除目前的路徑進度與練習顯示狀態）');
+    if (!ok) return;
+
+    setPlan([]);
+    setDayIndex(0);
+    setDayProgress({});
+    setRevealed({});
+    setAnswers({});
+    setDiagIndex(0);
+    didAutoJumpToNextIncompleteRef.current = false;
+    setView('diagnostic');
+  }
+
   const submitDiagnostic = useCallback(() => {
     // Guard: ensure the diagnostic is actually complete.
     const firstUnanswered = allQuestions.findIndex((q) => answers?.[q.id] === undefined);
@@ -1362,6 +1376,15 @@ export default function App() {
                       title="用目前的診斷結果重新產生 7 日路徑（會重置路徑進度）"
                     >
                       重新產生路徑
+                    </button>
+
+                    <button
+                      className="rounded-lg border border-rose-300/20 bg-rose-500/10 px-4 py-2 text-sm text-rose-100 hover:bg-rose-500/15"
+                      type="button"
+                      onClick={restartDiagnosticFlow}
+                      title="重新做診斷（會清除目前的路徑進度與練習顯示狀態）"
+                    >
+                      重新診斷
                     </button>
 
                     <button
