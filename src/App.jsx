@@ -100,8 +100,33 @@ function safeParse(json, fallback) {
   }
 }
 
+function storageGet(key) {
+  try {
+    // localStorage can throw in some privacy modes / if disabled
+    return window?.localStorage?.getItem(key) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function storageSet(key, value) {
+  try {
+    window?.localStorage?.setItem(key, value);
+  } catch {
+    // ignore write failures (quota, disabled storage)
+  }
+}
+
+function storageRemove(key) {
+  try {
+    window?.localStorage?.removeItem(key);
+  } catch {
+    // ignore
+  }
+}
+
 function loadPersistedState() {
-  const raw = localStorage.getItem(STORAGE_KEY);
+  const raw = storageGet(STORAGE_KEY);
   if (!raw) return null;
   const s = safeParse(raw, null);
   if (!s || typeof s !== 'object') return null;
@@ -156,7 +181,7 @@ export default function App() {
       autoNext,
       savedAt: new Date().toISOString()
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    storageSet(STORAGE_KEY, JSON.stringify(payload));
   }, [plan, dayIndex, answers, dayProgress, revealed, autoNext]);
 
   const allQuestions = useMemo(() => getAllDiagnosticQuestions(), []);
@@ -235,7 +260,7 @@ export default function App() {
     // keep minimal: clear persisted state + reset in-memory state
     const ok = window.confirm('確定要重置進度？這會清除你的診斷結果與 7 日路徑。');
     if (!ok) return;
-    localStorage.removeItem(STORAGE_KEY);
+    storageRemove(STORAGE_KEY);
     setView('home');
     setDiagIndex(0);
     setAnswers({});
@@ -243,6 +268,7 @@ export default function App() {
     setDayIndex(0);
     setDayProgress({});
     setRevealed({});
+    setAutoNext(true);
   }
 
   const buildLabel = useMemo(() => formatBuildTime(BUILD_TIME), []);
