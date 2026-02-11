@@ -409,6 +409,10 @@ export default function App() {
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+                <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-white/60">
+                  <span>技能點：</span>
+                  <Badge tone="info">{SKILLS.find((s) => s.id === currentQ?.skillId)?.name || currentQ?.skillId || '—'}</Badge>
+                </div>
                 <div className="text-sm font-semibold text-white/90">{currentQ?.stem}</div>
                 <div className="mt-3 grid gap-2">
                   {(currentQ?.choices || []).map((c, idx) => {
