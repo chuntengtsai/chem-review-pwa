@@ -94,10 +94,13 @@ function pickPlan(perSkill, days = 7) {
     .map(([skillId, v]) => ({ skillId, mastery: v.mastery }))
     .sort((a, b) => a.mastery - b.mastery);
 
-  // simple: rotate through weakest skills
+  // Simple: rotate through weakest skills.
+  // Guard: if we somehow have no skills, return an empty plan instead of [undefined...].
+  if (!ranked.length) return [];
+
   const plan = [];
   for (let i = 0; i < days; i++) {
-    plan.push(ranked[i % Math.max(1, ranked.length)]?.skillId);
+    plan.push(ranked[i % ranked.length].skillId);
   }
   return plan;
 }
@@ -438,6 +441,10 @@ export default function App() {
     }
 
     const newPlan = pickPlan(perSkill, 7);
+    if (!newPlan.length) {
+      window.alert('目前無法產生路徑：找不到任何技能點。請重新整理或更新題庫設定。');
+      return;
+    }
     setPlan(newPlan);
     setDayIndex(0);
     setView('result');
