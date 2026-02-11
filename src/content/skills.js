@@ -386,8 +386,8 @@ export const SKILLS = [
         kind: 'mc',
         stem: '將 100 mL 的 2.0 M 溶液稀釋至 400 mL，新濃度為？',
         choices: ['0.50 M', '1.0 M', '2.0 M', '8.0 M'],
-        answer: 1,
-        explanation: 'M1V1=M2V2 → 2.0×0.100 = M2×0.400 → M2=0.50 M（注意單位 L）。',
+        answer: 0,
+        explanation: 'M1V1=M2V2 → 2.0×0.100 = M2×0.400 → M2=0.50 M（注意體積要用 L）。',
         wrongReasonTags: ['mL/L換算錯', '稀釋公式錯']
       }
     ],
