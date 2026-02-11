@@ -889,9 +889,12 @@ export default function App() {
   }
 
   async function exportProgress() {
+    const nowIso = new Date().toISOString();
+    const ts = nowIso.replace(/[:.]/g, '-');
+
     const payload = {
       version: 1,
-      exportedAt: new Date().toISOString(),
+      exportedAt: nowIso,
       appVersion: APP_VERSION || undefined,
       buildTime: BUILD_TIME || undefined,
       plan,
@@ -905,10 +908,11 @@ export default function App() {
     const text = JSON.stringify(payload, null, 2);
 
     // Prefer native share sheet on mobile; fall back to clipboard / download.
+    // Use a timestamped filename to avoid overwriting duplicates in chat apps / download managers.
     const shared = await tryNativeShare({
       title: '化學覆習進度（JSON）',
       text,
-      filename: 'chem-review-progress.json',
+      filename: `chem-review-progress_${ts}.json`,
       mimeType: 'application/json'
     });
     if (shared) return;
@@ -919,7 +923,6 @@ export default function App() {
       return;
     }
 
-    const ts = new Date().toISOString().replace(/[:.]/g, '-');
     const downloaded = downloadText({ filename: `chem-review-progress_${ts}.json`, text });
     if (downloaded) {
       window.alert('你的瀏覽器不允許自動複製。我已改用「下載檔案」備份進度（JSON）。');
@@ -930,13 +933,17 @@ export default function App() {
   }
 
   async function exportShareSummary() {
+    const nowIso = new Date().toISOString();
+    const ts = nowIso.replace(/[:.]/g, '-');
+
     const text = buildShareSummary();
 
     // Prefer native share sheet on mobile; fall back to clipboard / download.
+    // Use a timestamped filename to avoid overwriting duplicates in chat apps / download managers.
     const shared = await tryNativeShare({
       title: '化學覆習進度摘要',
       text,
-      filename: 'chem-review-summary.txt',
+      filename: `chem-review-summary_${ts}.txt`,
       mimeType: 'text/plain;charset=utf-8'
     });
     if (shared) return;
@@ -947,7 +954,6 @@ export default function App() {
       return;
     }
 
-    const ts = new Date().toISOString().replace(/[:.]/g, '-');
     const downloaded = downloadText({ filename: `chem-review-summary_${ts}.txt`, text });
     if (downloaded) {
       window.alert('你的瀏覽器不允許自動複製。我已改用「下載檔案」匯出摘要（txt）。');
