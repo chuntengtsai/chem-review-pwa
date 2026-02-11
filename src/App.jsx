@@ -1257,7 +1257,7 @@ export default function App() {
                     const chosen = answers[currentQ.id] === idx;
                     return (
                       <button
-                        key={c}
+                        key={`${currentQ.id}-${idx}`}
                         type="button"
                         className={cls(
                           'w-full text-left rounded-xl border px-4 py-3 text-sm',
