@@ -6,6 +6,11 @@ const BUILD_TIME = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '';
 
 function formatBuildTime(iso) {
   if (!iso) return '';
+  return formatLocalTime(iso);
+}
+
+function formatLocalTime(iso) {
+  if (!iso) return '';
   try {
     const d = new Date(iso);
     const fmt = new Intl.DateTimeFormat('zh-TW', {
@@ -485,7 +490,7 @@ export default function App() {
   function buildShareSummary() {
     const lines = [];
     lines.push('高一化學覆習（診斷 → 補洞）進度摘要');
-    lines.push(`匯出時間：${new Date().toISOString()}`);
+    lines.push(`匯出時間（台北）：${formatLocalTime(new Date().toISOString())}`);
 
     if (!plan?.length) {
       lines.push('尚未產生 7 日路徑（請先完成診斷）。');
@@ -506,6 +511,18 @@ export default function App() {
 
     lines.push('');
     lines.push(`7 日路徑進度：已完成 ${completedDays}/${plan.length} 天`);
+
+    const todaySid = plan?.[dayIndex];
+    const todaySkill = SKILLS.find((x) => x.id === todaySid);
+    const todayP = dayProgress?.[dayIndex] || {};
+    const todayIsDone = Boolean(todayP.conceptDone && todayP.practiceDone);
+    lines.push(`今天：Day ${dayIndex + 1} ${todaySkill?.name || todaySid || '—'} ${todayIsDone ? '✅' : '⬜'}`);
+
+    if (nextIncompleteDay !== null) {
+      lines.push(`下一個未完成：Day ${nextIncompleteDay + 1}`);
+    }
+
+    lines.push('');
     lines.push('路徑：');
     for (let i = 0; i < plan.length; i++) {
       const sid = plan[i];
