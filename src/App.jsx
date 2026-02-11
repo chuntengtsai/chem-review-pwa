@@ -112,6 +112,9 @@ export default function App() {
   const [view, setView] = useState('home'); // home|diagnostic|result|task
   const [diagIndex, setDiagIndex] = useState(0);
 
+  // practice: revealed answers per question id
+  const [revealed, setRevealed] = useState(() => ({}));
+
   const [answers, setAnswers] = useState(() => {
     const s = loadPersistedState();
     return s?.answers && typeof s.answers === 'object' ? s.answers : {};
@@ -208,6 +211,7 @@ export default function App() {
     setPlan([]);
     setDayIndex(0);
     setDayProgress({});
+    setRevealed({});
   }
 
   const buildLabel = useMemo(() => formatBuildTime(BUILD_TIME), []);
@@ -531,14 +535,36 @@ export default function App() {
                   MVP Demo：暫用診斷題當練習題（之後每技能點會有 10 題練習）。
                 </div>
                 <div className="mt-3 grid gap-2">
-                  {getPracticeQuestionsForSkill(currentSkill?.id || '').map((q) => (
-                    <div key={q.id} className="rounded-xl border border-white/10 bg-black/10 p-4">
-                      <div className="text-sm font-semibold text-white/90">{q.stem}</div>
-                      <div className="mt-2 text-xs text-white/55">
-                        答案：{String.fromCharCode(65 + q.answer)} · {q.explanation}
+                  {getPracticeQuestionsForSkill(currentSkill?.id || '').map((q) => {
+                    const isRevealed = Boolean(revealed?.[q.id]);
+                    return (
+                      <div key={q.id} className="rounded-xl border border-white/10 bg-black/10 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="text-sm font-semibold text-white/90">{q.stem}</div>
+                          <button
+                            className={cls(
+                              'shrink-0 rounded-lg border px-3 py-1.5 text-xs',
+                              isRevealed
+                                ? 'border-emerald-300/20 bg-emerald-500/10 text-emerald-50 hover:bg-emerald-500/15'
+                                : 'border-white/10 bg-white/5 text-white/75 hover:bg-white/10'
+                            )}
+                            type="button"
+                            onClick={() => setRevealed((p) => ({ ...p, [q.id]: !p?.[q.id] }))}
+                          >
+                            {isRevealed ? '隱藏答案' : '顯示答案'}
+                          </button>
+                        </div>
+
+                        {isRevealed ? (
+                          <div className="mt-2 text-xs text-white/55">
+                            答案：{String.fromCharCode(65 + q.answer)} · {q.explanation}
+                          </div>
+                        ) : (
+                          <div className="mt-2 text-xs text-white/45">先自己做 30–60 秒，再按「顯示答案」對答案與錯因。</div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className="mt-4 flex items-center justify-between">
