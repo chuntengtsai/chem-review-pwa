@@ -125,6 +125,29 @@ function storageRemove(key) {
   }
 }
 
+async function copyToClipboard(text) {
+  try {
+    await navigator?.clipboard?.writeText(text);
+    return true;
+  } catch {
+    // Fallback for older browsers / stricter permissions.
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.top = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return Boolean(ok);
+    } catch {
+      return false;
+    }
+  }
+}
+
 function loadPersistedState() {
   const raw = storageGet(STORAGE_KEY);
   if (!raw) return null;
@@ -332,6 +355,74 @@ export default function App() {
     setView('task');
   }
 
+  async function exportProgress() {
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      plan,
+      dayIndex,
+      answers,
+      dayProgress,
+      revealed,
+      autoNext
+    };
+    const text = JSON.stringify(payload, null, 2);
+    const ok = await copyToClipboard(text);
+    if (!ok) {
+      window.prompt('你的瀏覽器不允許自動複製。請手動複製以下文字：', text);
+    } else {
+      window.alert('已複製進度 JSON 到剪貼簿。');
+    }
+  }
+
+  function importProgress() {
+    const raw = window.prompt('貼上先前匯出的進度 JSON（會覆蓋目前進度）');
+    if (!raw) return;
+
+    const parsed = safeParse(raw, null);
+    if (!parsed || typeof parsed !== 'object') {
+      window.alert('格式不正確：不是 JSON 物件');
+      return;
+    }
+
+    // Minimal validation (keep it permissive)
+    const nextPlan = Array.isArray(parsed.plan) ? parsed.plan : null;
+    const nextDayIndex = typeof parsed.dayIndex === 'number' ? parsed.dayIndex : 0;
+    const nextAnswers = parsed.answers && typeof parsed.answers === 'object' ? parsed.answers : {};
+    const nextDayProgress = parsed.dayProgress && typeof parsed.dayProgress === 'object' ? parsed.dayProgress : {};
+    const nextRevealed = parsed.revealed && typeof parsed.revealed === 'object' ? parsed.revealed : {};
+    const nextAutoNext = typeof parsed.autoNext === 'boolean' ? parsed.autoNext : true;
+
+    if (!nextPlan) {
+      window.alert('格式不正確：plan 必須是陣列');
+      return;
+    }
+
+    setPlan(nextPlan);
+    setDayIndex(Math.max(0, Math.min(nextPlan.length - 1, nextDayIndex)));
+    setAnswers(nextAnswers);
+    setDayProgress(nextDayProgress);
+    setRevealed(nextRevealed);
+    setAutoNext(nextAutoNext);
+
+    // Persist immediately
+    storageSet(
+      STORAGE_KEY,
+      JSON.stringify({
+        plan: nextPlan,
+        dayIndex: nextDayIndex,
+        answers: nextAnswers,
+        dayProgress: nextDayProgress,
+        revealed: nextRevealed,
+        autoNext: nextAutoNext,
+        savedAt: new Date().toISOString()
+      })
+    );
+
+    setView(nextPlan.length > 0 ? 'result' : 'home');
+    window.alert('已匯入進度。');
+  }
+
   function resetProgress() {
     // keep minimal: clear persisted state + reset in-memory state
     const ok = window.confirm('確定要重置進度？這會清除你的診斷結果與 7 日路徑。');
@@ -427,6 +518,22 @@ export default function App() {
                         onClick={() => setView('task')}
                       >
                         進入今日任務
+                      </button>
+                      <button
+                        className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
+                        type="button"
+                        onClick={exportProgress}
+                        title="把進度匯出成 JSON（可備份/換裝置）"
+                      >
+                        匯出進度
+                      </button>
+                      <button
+                        className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
+                        type="button"
+                        onClick={importProgress}
+                        title="從 JSON 匯入進度（會覆蓋目前進度）"
+                      >
+                        匯入進度
                       </button>
                       <button
                         className="rounded-lg border border-rose-300/20 bg-rose-500/10 px-4 py-2 text-sm text-rose-100 hover:bg-rose-500/15"
