@@ -391,6 +391,18 @@ export default function App() {
     return Math.round((answeredCount / allQuestions.length) * 100);
   }, [answeredCount, allQuestions.length]);
 
+  const firstUnansweredIndex = useMemo(() => {
+    if (!allQuestions.length) return -1;
+    return allQuestions.findIndex((q) => answers?.[q.id] === undefined);
+  }, [allQuestions, answers]);
+
+  const unansweredCount = useMemo(() => {
+    if (!allQuestions.length) return 0;
+    let n = 0;
+    for (const q of allQuestions) if (answers?.[q.id] === undefined) n += 1;
+    return n;
+  }, [allQuestions, answers]);
+
   const stepState = useMemo(() => {
     const diagDone = plan.length > 0; // plan exists only after submit
     const inDiag = view === 'diagnostic';
@@ -1021,9 +1033,25 @@ export default function App() {
               <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-white/55">
                 <span>
                   題目 {diagIndex + 1} / {allQuestions.length} · 已作答 {answeredCount} / {allQuestions.length}（{answeredPct}%）
+                  {unansweredCount > 0 ? ` · 未答 ${unansweredCount}` : ''}
                 </span>
 
                 <div className="flex items-center gap-2">
+                  <button
+                    className={cls(
+                      'rounded-lg border px-3 py-1.5 text-xs hover:bg-white/10 disabled:opacity-50',
+                      'border-white/10 bg-white/5 text-white/75'
+                    )}
+                    type="button"
+                    disabled={firstUnansweredIndex < 0}
+                    onClick={() => {
+                      if (firstUnansweredIndex >= 0) setDiagIndex(firstUnansweredIndex);
+                    }}
+                    title={firstUnansweredIndex < 0 ? '全部題目已作答' : '跳到第一個未作答的題目'}
+                  >
+                    跳到未答
+                  </button>
+
                   <button
                     className={cls(
                       'rounded-lg border px-3 py-1.5 text-xs hover:bg-white/10',
