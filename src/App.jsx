@@ -100,29 +100,38 @@ function safeParse(json, fallback) {
   }
 }
 
+function loadPersistedState() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return null;
+  const s = safeParse(raw, null);
+  if (!s || typeof s !== 'object') return null;
+  return s;
+}
+
 export default function App() {
   const [view, setView] = useState('home'); // home|diagnostic|result|task
   const [diagIndex, setDiagIndex] = useState(0);
-  const [answers, setAnswers] = useState({});
 
-  const [plan, setPlan] = useState([]); // skillIds
-  const [dayIndex, setDayIndex] = useState(0);
+  const [answers, setAnswers] = useState(() => {
+    const s = loadPersistedState();
+    return s?.answers && typeof s.answers === 'object' ? s.answers : {};
+  });
+
+  const [plan, setPlan] = useState(() => {
+    const s = loadPersistedState();
+    return Array.isArray(s?.plan) ? s.plan : [];
+  }); // skillIds
+
+  const [dayIndex, setDayIndex] = useState(() => {
+    const s = loadPersistedState();
+    return typeof s?.dayIndex === 'number' ? s.dayIndex : 0;
+  });
 
   // per day: { [dayIndex]: { conceptDone: boolean, practiceDone: boolean } }
-  const [dayProgress, setDayProgress] = useState({});
-  const diagnosticDone = useMemo(() => Object.keys(answers || {}).length > 0 && plan.length > 0, [answers, plan]);
-
-  // load persisted state
-  useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const s = safeParse(raw, null);
-    if (!s || typeof s !== 'object') return;
-    if (Array.isArray(s.plan)) setPlan(s.plan);
-    if (typeof s.dayIndex === 'number') setDayIndex(s.dayIndex);
-    if (s.answers && typeof s.answers === 'object') setAnswers(s.answers);
-    if (s.dayProgress && typeof s.dayProgress === 'object') setDayProgress(s.dayProgress);
-  }, []);
+  const [dayProgress, setDayProgress] = useState(() => {
+    const s = loadPersistedState();
+    return s?.dayProgress && typeof s.dayProgress === 'object' ? s.dayProgress : {};
+  });
 
   // persist state
   useEffect(() => {
@@ -188,6 +197,19 @@ export default function App() {
     setView('task');
   }
 
+  function resetProgress() {
+    // keep minimal: clear persisted state + reset in-memory state
+    const ok = window.confirm('確定要重置進度？這會清除你的診斷結果與 7 日路徑。');
+    if (!ok) return;
+    localStorage.removeItem(STORAGE_KEY);
+    setView('home');
+    setDiagIndex(0);
+    setAnswers({});
+    setPlan([]);
+    setDayIndex(0);
+    setDayProgress({});
+  }
+
   const buildLabel = useMemo(() => formatBuildTime(BUILD_TIME), []);
 
   return (
@@ -246,6 +268,13 @@ export default function App() {
                         onClick={() => setView('task')}
                       >
                         進入今日任務
+                      </button>
+                      <button
+                        className="rounded-lg border border-rose-300/20 bg-rose-500/10 px-4 py-2 text-sm text-rose-100 hover:bg-rose-500/15"
+                        type="button"
+                        onClick={resetProgress}
+                      >
+                        重置進度
                       </button>
                     </>
                   ) : null}
@@ -361,13 +390,22 @@ export default function App() {
                   <div className="text-sm text-white/70">
                     7 日補洞路徑（示範）：第 1 天從最弱技能點開始。
                   </div>
-                  <button
-                    className="rounded-lg border border-white/10 bg-cyan-500/15 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/20"
-                    type="button"
-                    onClick={goTodayTask}
-                  >
-                    進入今日任務
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      className="rounded-lg border border-white/10 bg-cyan-500/15 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/20"
+                      type="button"
+                      onClick={goTodayTask}
+                    >
+                      進入今日任務
+                    </button>
+                    <button
+                      className="rounded-lg border border-rose-300/20 bg-rose-500/10 px-4 py-2 text-sm text-rose-100 hover:bg-rose-500/15"
+                      type="button"
+                      onClick={resetProgress}
+                    >
+                      重置進度
+                    </button>
+                  </div>
                 </div>
               </div>
 
