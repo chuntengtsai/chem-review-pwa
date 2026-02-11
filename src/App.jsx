@@ -1513,6 +1513,30 @@ export default function App() {
                       </button>
                     ) : null}
 
+                    {practiceQs.length > 0 ? (
+                      <button
+                        className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                        type="button"
+                        onClick={() => {
+                          const ok = window.confirm('要把本日練習題的「顯示答案」全部重置嗎？（也會把「練習完成」標記改回未完成）');
+                          if (!ok) return;
+
+                          setRevealed((p) => {
+                            const next = { ...(p || {}) };
+                            for (const q of practiceQs) next[q.id] = false;
+                            return next;
+                          });
+
+                          setDayProgress((p) => ({
+                            ...p,
+                            [dayIndex]: { ...(p?.[dayIndex] || {}), practiceDone: false }
+                          }));
+                        }}
+                        title="把本日練習題全部改回未顯示（方便重新自我測驗）"
+                      >
+                        重置本日練習
+                      </button>
+                    ) : null}
 
                     {firstUnrevealedPractice ? (
                       <button
