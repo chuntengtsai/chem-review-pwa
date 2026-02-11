@@ -867,7 +867,10 @@ export default function App() {
   const buildLabel = useMemo(() => formatBuildTime(BUILD_TIME), []);
 
   const practiceQs = useMemo(() => getPracticeQuestionsForSkill(currentSkill?.id || ''), [currentSkill?.id]);
-  const allPracticeRevealed = useMemo(() => practiceQs.length > 0 && practiceQs.every((q) => Boolean(revealed?.[q.id])), [practiceQs, revealed]);
+
+  // If a skill has 0 practice questions (e.g., during MVP expansion), don't block users from marking practice as done.
+  // Treat "all revealed" as true when there is nothing to reveal.
+  const allPracticeRevealed = useMemo(() => practiceQs.every((q) => Boolean(revealed?.[q.id])), [practiceQs, revealed]);
   const practiceRevealedCount = useMemo(() => practiceQs.filter((q) => Boolean(revealed?.[q.id])).length, [practiceQs, revealed]);
 
   const firstUnrevealedPractice = useMemo(() => practiceQs.find((q) => !revealed?.[q.id]) || null, [practiceQs, revealed]);
