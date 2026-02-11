@@ -581,6 +581,42 @@ export const SKILLS = [
         answer: 1,
         explanation: '常見策略：先配複雜物種（含多元素/多原子），單質通常最後；含 H/O 的反應常把 O 最後。',
         wrongReasonTags: ['策略概念錯']
+      },
+      {
+        id: 'bal_p7',
+        kind: 'mc',
+        stem: '配平：__ H2O2 → __ H2O + __ O2',
+        choices: ['1,1,1', '2,2,1', '2,1,1', '1,2,1'],
+        answer: 1,
+        explanation: '2H2O2 → 2H2O + O2。先配 H（左右皆 4），再配 O（左 4；右 2+2=4）。',
+        wrongReasonTags: ['O係數錯', '最小整數係數錯']
+      },
+      {
+        id: 'bal_p8',
+        kind: 'mc',
+        stem: '配平：__ Zn + __ HCl → __ ZnCl2 + __ H2',
+        choices: ['1,1,1,1', '1,2,1,1', '2,1,2,1', '1,2,2,1'],
+        answer: 1,
+        explanation: 'ZnCl2 需要 2 個 Cl，因此左邊要 2HCl；H 也因此為 2，生成 1H2。',
+        wrongReasonTags: ['只配Cl忘了H', '係數最小化錯']
+      },
+      {
+        id: 'bal_p9',
+        kind: 'mc',
+        stem: '配平：__ NaOH + __ H2SO4 → __ Na2SO4 + __ H2O',
+        choices: ['1,1,1,1', '2,1,1,2', '1,2,1,2', '2,2,1,4'],
+        answer: 1,
+        explanation: '先配 Na2SO4：右邊需 2NaOH；此時 H=2(來自2NaOH)+2(來自H2SO4)=4，右邊需 2H2O；O 也可檢查守恆。',
+        wrongReasonTags: ['先配複雜物種策略錯', 'H/O檢查漏掉']
+      },
+      {
+        id: 'bal_p10',
+        kind: 'mc',
+        stem: '配平：__ C2H5OH + __ O2 → __ CO2 + __ H2O',
+        choices: ['1,2,2,3', '1,3,2,3', '1,3,1,2', '2,5,4,6'],
+        answer: 1,
+        explanation: '先配 C：2CO2；配 H：3H2O；右側 O=2×2+3×1=7。左側乙醇自帶 1 個 O，所以 O2 需提供 6 個 O → 3O2。',
+        wrongReasonTags: ['含氧燃燒最後配O錯', '忽略燃料自帶O']
       }
     ]
   }
