@@ -373,6 +373,25 @@ export default function App() {
     setDayIndex(0);
     setView('result');
   }, [allQuestions, answers, perSkill]);
+  // Small UX: when switching views, scroll to top so users don't get "stuck" mid-page.
+  useEffect(() => {
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch {
+      // ignore
+    }
+  }, [view]);
+
+  // When browsing different days in the task view, snap back to the concept section.
+  useEffect(() => {
+    if (view !== 'task') return;
+    try {
+      document.getElementById('concept')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch {
+      // ignore
+    }
+  }, [view, dayIndex]);
+
   // Keyboard shortcuts (desktop-friendly):
   // - 1-4 or A-D: choose option
   // - ←/→: prev/next (→ requires current answered)
