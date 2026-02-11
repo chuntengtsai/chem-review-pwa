@@ -917,6 +917,10 @@ export default function App() {
 
     const clampedDayIndex = Math.max(0, Math.min(nextPlan.length - 1, nextDayIndex));
 
+    // Prevent the reactive persist effect from immediately overwriting imported savedAt
+    // (and re-stamping it to "now") right after we set state.
+    skipNextPersistRef.current = true;
+
     setPlan(nextPlan);
     setDayIndex(clampedDayIndex);
     setAnswers(nextAnswers);
