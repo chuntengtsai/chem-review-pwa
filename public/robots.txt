@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Prevent indexing of build artifacts if deployed under a subpath.
+Sitemap: /sitemap.xml
