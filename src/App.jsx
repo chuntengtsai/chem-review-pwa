@@ -67,19 +67,24 @@ function computeMastery(skills, answersByQid) {
   const perSkill = {};
   for (const s of skills) {
     const qs = s.diagnostic || [];
-    if (qs.length === 0) {
-      perSkill[s.id] = { correct: 0, total: 0, mastery: 0 };
+    const total = qs.length;
+    if (total === 0) {
+      perSkill[s.id] = { correct: 0, answered: 0, total: 0, mastery: 0 };
       continue;
     }
+
     let correct = 0;
+    let answered = 0;
     for (const q of qs) {
       const a = answersByQid[q.id];
       if (a === undefined) continue;
+      answered += 1;
       if (a === q.answer) correct += 1;
     }
-    const total = qs.length;
-    const mastery = Math.round((correct / total) * 100);
-    perSkill[s.id] = { correct, total, mastery };
+
+    // Use answered questions as denominator so partial diagnostics don't look artificially low.
+    const mastery = answered > 0 ? Math.round((correct / answered) * 100) : 0;
+    perSkill[s.id] = { correct, answered, total, mastery };
   }
   return perSkill;
 }
@@ -322,7 +327,13 @@ export default function App() {
   const perSkill = useMemo(() => computeMastery(SKILLS, answers), [answers]);
   const weakTop3 = useMemo(() => {
     const xs = Object.entries(perSkill)
-      .map(([skillId, v]) => ({ skillId, mastery: v.mastery }))
+      .map(([skillId, v]) => ({
+        skillId,
+        mastery: v.mastery,
+        correct: v.correct,
+        answered: v.answered,
+        total: v.total
+      }))
       .sort((a, b) => a.mastery - b.mastery)
       .slice(0, 3);
     return xs;
@@ -570,7 +581,13 @@ export default function App() {
     }
 
     const ranked = Object.entries(perSkill)
-      .map(([skillId, v]) => ({ skillId, mastery: v.mastery, correct: v.correct, total: v.total }))
+      .map(([skillId, v]) => ({
+        skillId,
+        mastery: v.mastery,
+        correct: v.correct,
+        answered: v.answered,
+        total: v.total
+      }))
       .sort((a, b) => a.mastery - b.mastery);
 
     const topWeak = ranked.slice(0, 3);
@@ -578,7 +595,9 @@ export default function App() {
     lines.push('弱點 Top 3：');
     for (const w of topWeak) {
       const s = SKILLS.find((x) => x.id === w.skillId);
-      lines.push(`- ${s?.name || w.skillId}: ${w.mastery}%（${w.correct}/${w.total}）`);
+      const denom = w.answered ?? 0;
+      const suffix = denom > 0 ? `${w.correct}/${denom}` : `0/0`;
+      lines.push(`- ${s?.name || w.skillId}: ${w.mastery}%（${suffix}，共 ${w.total} 題）`);
     }
 
     lines.push('');
@@ -1046,6 +1065,9 @@ export default function App() {
                           <div>
                             <div className="text-sm font-semibold text-white/90">{s?.name}</div>
                             <div className="mt-1 text-xs text-white/55">{s?.blurb}</div>
+                            <div className="mt-2 text-xs text-white/55">
+                              {w.answered > 0 ? `答對 ${w.correct}/${w.answered}（共 ${w.total} 題）` : `尚未作答（共 ${w.total} 題）`}
+                            </div>
                           </div>
                           <Badge>{w.mastery}%</Badge>
                         </div>
