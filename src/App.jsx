@@ -1390,17 +1390,53 @@ export default function App() {
     return false;
   }
 
-  function onDragEnterImport(e) {
+  function hasFileTransfer(dt) {
+    if (!dt) return false;
     try {
-      if (!isProbablyProgressJsonFile(e?.dataTransfer?.items?.[0]?.getAsFile?.())) return;
+      // Most browsers: types includes Files for file drags.
+      if (Array.isArray(dt.types) && dt.types.includes('Files')) return true;
+      if (dt.types && typeof dt.types.contains === 'function' && dt.types.contains('Files')) return true;
+      if (dt.items && dt.items.length) return true;
+      if (dt.files && dt.files.length) return true;
     } catch {
       // ignore
     }
+    return false;
+  }
+
+  function firstDraggedFile(dt) {
+    try {
+      const itemFile = dt?.items?.[0]?.getAsFile?.();
+      if (itemFile) return itemFile;
+    } catch {
+      // ignore
+    }
+    try {
+      const file = dt?.files?.[0];
+      if (file) return file;
+    } catch {
+      // ignore
+    }
+    return null;
+  }
+
+  function onDragEnterImport(e) {
+    const dt = e?.dataTransfer;
+    if (!hasFileTransfer(dt)) return;
+
+    // Best-effort: only show the import UI when we can tell it's probably JSON.
+    // Some browsers don't expose filenames/types until drop; in that case, still allow the UX and validate on drop.
+    const f = firstDraggedFile(dt);
+    if (f && !isProbablyProgressJsonFile(f)) return;
+
     e.preventDefault();
     setDragImportActive(true);
   }
 
   function onDragOverImport(e) {
+    const dt = e?.dataTransfer;
+    if (!hasFileTransfer(dt)) return;
+
     e.preventDefault();
     // Keep it sticky while hovering.
     if (!dragImportActive) setDragImportActive(true);
