@@ -113,7 +113,10 @@ export default function App() {
   const [diagIndex, setDiagIndex] = useState(0);
 
   // practice: revealed answers per question id
-  const [revealed, setRevealed] = useState(() => ({}));
+  const [revealed, setRevealed] = useState(() => {
+    const s = loadPersistedState();
+    return s?.revealed && typeof s.revealed === 'object' ? s.revealed : {};
+  });
 
   const [answers, setAnswers] = useState(() => {
     const s = loadPersistedState();
@@ -143,10 +146,11 @@ export default function App() {
       dayIndex,
       answers,
       dayProgress,
+      revealed,
       savedAt: new Date().toISOString()
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  }, [plan, dayIndex, answers, dayProgress]);
+  }, [plan, dayIndex, answers, dayProgress, revealed]);
 
   const allQuestions = useMemo(() => getAllDiagnosticQuestions(), []);
 
@@ -215,6 +219,9 @@ export default function App() {
   }
 
   const buildLabel = useMemo(() => formatBuildTime(BUILD_TIME), []);
+
+  const practiceQs = useMemo(() => getPracticeQuestionsForSkill(currentSkill?.id || ''), [currentSkill?.id]);
+  const allPracticeRevealed = useMemo(() => practiceQs.length > 0 && practiceQs.every((q) => Boolean(revealed?.[q.id])), [practiceQs, revealed]);
 
   return (
     <div className="min-h-screen">
@@ -531,11 +538,26 @@ export default function App() {
                     </button>
                   </div>
                 </div>
-                <div className="mt-2 text-sm text-white/65">
-                  MVP Demo：暫用診斷題當練習題（之後每技能點會有 10 題練習）。
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-sm text-white/65">MVP Demo：暫用診斷題當練習題（之後每技能點會有 10 題練習）。</div>
+                  {practiceQs.length > 0 ? (
+                    <button
+                      className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                      type="button"
+                      onClick={() =>
+                        setRevealed((p) => {
+                          const next = { ...(p || {}) };
+                          for (const q of practiceQs) next[q.id] = !allPracticeRevealed;
+                          return next;
+                        })
+                      }
+                    >
+                      {allPracticeRevealed ? '全部隱藏' : '全部顯示'}
+                    </button>
+                  ) : null}
                 </div>
                 <div className="mt-3 grid gap-2">
-                  {getPracticeQuestionsForSkill(currentSkill?.id || '').map((q) => {
+                  {practiceQs.map((q) => {
                     const isRevealed = Boolean(revealed?.[q.id]);
                     return (
                       <div key={q.id} className="rounded-xl border border-white/10 bg-black/10 p-4">
