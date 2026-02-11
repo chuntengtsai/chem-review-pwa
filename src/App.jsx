@@ -373,21 +373,6 @@ export default function App() {
     return null;
   }, [plan.length, dayProgress]);
 
-  const chooseDiagnosticAnswer = useCallback(
-    (qid, idx) => {
-      setAnswers((p) => ({ ...p, [qid]: idx }));
-
-      if (!autoNext) return;
-
-      // advance after selection (small delay to show highlight)
-      window.setTimeout(() => {
-        setDiagIndex((i) => Math.min(allQuestions.length - 1, i + 1));
-      }, 120);
-    },
-    [autoNext, allQuestions.length]
-  );
-
-
   function startDiagnostic({ reset = false } = {}) {
     setView('diagnostic');
 
@@ -416,6 +401,26 @@ export default function App() {
     setDayIndex(0);
     setView('result');
   }, [allQuestions, answers, perSkill]);
+
+  const chooseDiagnosticAnswer = useCallback(
+    (qid, idx, atIndex) => {
+      setAnswers((p) => ({ ...p, [qid]: idx }));
+
+      if (!autoNext) return;
+
+      // advance after selection (small delay to show highlight)
+      window.setTimeout(() => {
+        const isLast = Number(atIndex) >= allQuestions.length - 1;
+        if (isLast) {
+          submitDiagnostic();
+          return;
+        }
+        setDiagIndex((i) => Math.min(allQuestions.length - 1, i + 1));
+      }, 120);
+    },
+    [autoNext, allQuestions.length, submitDiagnostic]
+  );
+
   // Small UX: when switching views, scroll to top so users don't get "stuck" mid-page.
   useEffect(() => {
     try {
@@ -457,7 +462,7 @@ export default function App() {
         const idx = k.charCodeAt(0) - 'a'.charCodeAt(0);
         if (idx >= 0 && idx < choicesLen) {
           e.preventDefault();
-          chooseDiagnosticAnswer(q.id, idx);
+          chooseDiagnosticAnswer(q.id, idx, diagIndex);
         }
         return;
       }
@@ -467,7 +472,7 @@ export default function App() {
         const idx = Number(k) - 1;
         if (idx >= 0 && idx < choicesLen) {
           e.preventDefault();
-          chooseDiagnosticAnswer(q.id, idx);
+          chooseDiagnosticAnswer(q.id, idx, diagIndex);
         }
         return;
       }
@@ -878,7 +883,7 @@ export default function App() {
                             ? 'border-cyan-300/40 bg-cyan-500/10 text-cyan-50'
                             : 'border-white/10 bg-black/10 text-white/80 hover:bg-black/20'
                         )}
-                        onClick={() => chooseDiagnosticAnswer(currentQ.id, idx)}
+                        onClick={() => chooseDiagnosticAnswer(currentQ.id, idx, diagIndex)}
                       >
                         {String.fromCharCode(65 + idx)}. {c}
                       </button>
