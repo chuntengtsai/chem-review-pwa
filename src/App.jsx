@@ -2677,6 +2677,18 @@ export default function App() {
         </div>
       ) : null}
 
+      {!storageWritable ? (
+        <div
+          className="fixed bottom-28 left-3 z-50 rounded-full border border-amber-300/20 bg-amber-500/10 px-3 py-1 text-[11px] text-amber-50/90 backdrop-blur"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          title="偵測到瀏覽器禁止 localStorage（例如隱私模式）。請用「匯出進度」備份。"
+        >
+          無法自動儲存：請匯出備份
+        </div>
+      ) : null}
+
       {toast?.msg ? (
         <div
           className={cls(
