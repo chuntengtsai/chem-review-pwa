@@ -689,6 +689,7 @@ export default function App() {
 
   const practiceQs = useMemo(() => getPracticeQuestionsForSkill(currentSkill?.id || ''), [currentSkill?.id]);
   const allPracticeRevealed = useMemo(() => practiceQs.length > 0 && practiceQs.every((q) => Boolean(revealed?.[q.id])), [practiceQs, revealed]);
+  const practiceRevealedCount = useMemo(() => practiceQs.filter((q) => Boolean(revealed?.[q.id])).length, [practiceQs, revealed]);
 
   return (
     <div className="min-h-screen">
@@ -1210,22 +1211,45 @@ export default function App() {
                   </div>
                 </div>
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                  <div className="text-sm text-white/65">MVP Demo：暫用診斷題當練習題（之後每技能點會有 10 題練習）。</div>
-                  {practiceQs.length > 0 ? (
+                  <div className="grid gap-1">
+                    <div className="text-sm text-white/65">MVP Demo：暫用診斷題當練習題（之後每技能點會有 10 題練習）。</div>
+                    {practiceQs.length > 0 ? (
+                      <div className="text-xs text-white/50">已顯示答案 {practiceRevealedCount}/{practiceQs.length}</div>
+                    ) : null}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {practiceQs.length > 0 ? (
+                      <button
+                        className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                        type="button"
+                        onClick={() =>
+                          setRevealed((p) => {
+                            const next = { ...(p || {}) };
+                            for (const q of practiceQs) next[q.id] = !allPracticeRevealed;
+                            return next;
+                          })
+                        }
+                      >
+                        {allPracticeRevealed ? '全部隱藏' : '全部顯示'}
+                      </button>
+                    ) : null}
+
                     <button
-                      className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                      className="rounded-lg border border-white/10 bg-emerald-500/10 px-3 py-1.5 text-xs text-emerald-50 hover:bg-emerald-500/15 disabled:opacity-50"
                       type="button"
+                      disabled={!allPracticeRevealed || Boolean(dayProgress?.[dayIndex]?.practiceDone)}
                       onClick={() =>
-                        setRevealed((p) => {
-                          const next = { ...(p || {}) };
-                          for (const q of practiceQs) next[q.id] = !allPracticeRevealed;
-                          return next;
-                        })
+                        setDayProgress((p) => ({
+                          ...p,
+                          [dayIndex]: { ...(p?.[dayIndex] || {}), practiceDone: true }
+                        }))
                       }
+                      title={!allPracticeRevealed ? '先把本日練習題答案都看過/對過，再標記完成' : '把練習標記為完成'}
                     >
-                      {allPracticeRevealed ? '全部隱藏' : '全部顯示'}
+                      練習完成
                     </button>
-                  ) : null}
+                  </div>
                 </div>
                 <div className="mt-3 grid gap-2">
                   {practiceQs.map((q) => {
