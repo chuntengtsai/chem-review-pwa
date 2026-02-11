@@ -1173,6 +1173,27 @@ export default function App() {
       return false;
     }
 
+    // If the imported file references skills/questions that no longer exist in this build,
+    // warn the user that some progress will be skipped.
+    try {
+      const rawPlanLen = Array.isArray(parsed.plan) ? parsed.plan.length : 0;
+      const rawAnswersLen = parsed.answers && typeof parsed.answers === 'object' ? Object.keys(parsed.answers).length : 0;
+      const droppedPlan = Math.max(0, rawPlanLen - nextPlan.length);
+      const droppedAnswers = Math.max(0, rawAnswersLen - Object.keys(nextAnswers || {}).length);
+
+      if (droppedPlan > 0 || droppedAnswers > 0) {
+        const ok = window.confirm(
+          `注意：這份進度檔包含目前版本不存在的內容，我會略過無法識別的資料再匯入。\n\n` +
+            (droppedPlan > 0 ? `- 已略過 ${droppedPlan} 個路徑技能點\n` : '') +
+            (droppedAnswers > 0 ? `- 已略過 ${droppedAnswers} 個作答記錄\n` : '') +
+            `\n仍要繼續匯入嗎？`
+        );
+        if (!ok) return false;
+      }
+    } catch {
+      // ignore
+    }
+
     const clampedDayIndex = Math.max(0, Math.min(nextPlan.length - 1, nextDayIndex));
 
     // Prevent the reactive persist effect from immediately overwriting imported savedAt
