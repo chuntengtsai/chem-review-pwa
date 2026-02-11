@@ -389,6 +389,15 @@ export const SKILLS = [
         answer: 0,
         explanation: 'M1V1=M2V2 → 2.0×0.100 = M2×0.400 → M2=0.50 M（注意體積要用 L）。',
         wrongReasonTags: ['mL/L換算錯', '稀釋公式錯']
+      },
+      {
+        id: 'mo_d3',
+        kind: 'mc',
+        stem: '0.20 M 溶液取 50.0 mL，其中溶質有多少 mol？',
+        choices: ['0.010', '0.020', '0.100', '0.200'],
+        answer: 0,
+        explanation: 'n = M·V = 0.20×0.0500 = 0.0100 mol（50.0 mL = 0.0500 L）。',
+        wrongReasonTags: ['mL/L換算錯', 'n=M·V套用錯']
       }
     ],
     practice: [
