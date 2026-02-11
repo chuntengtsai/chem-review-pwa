@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SKILLS, getAllDiagnosticQuestions, getPracticeQuestionsForSkill } from './content/skills.js';
 
 // eslint-disable-next-line no-undef
@@ -181,6 +181,8 @@ function loadPersistedState() {
 export default function App() {
   const [view, setView] = useState('home'); // home|diagnostic|result|task
   const [diagIndex, setDiagIndex] = useState(0);
+
+  const importFileRef = useRef(null);
 
   // diagnostic UX
   const [autoNext, setAutoNext] = useState(() => {
@@ -622,14 +624,10 @@ export default function App() {
     window.prompt('你的瀏覽器不允許自動複製/下載。請手動複製以下文字：', text);
   }
 
-  function importProgress() {
-    const raw = window.prompt('貼上先前匯出的進度 JSON（會覆蓋目前進度）');
-    if (!raw) return;
-
-    const parsed = safeParse(raw, null);
+  function applyImportedProgress(parsed) {
     if (!parsed || typeof parsed !== 'object') {
       window.alert('格式不正確：不是 JSON 物件');
-      return;
+      return false;
     }
 
     // Minimal validation (keep it permissive)
@@ -642,7 +640,7 @@ export default function App() {
 
     if (!nextPlan) {
       window.alert('格式不正確：plan 必須是陣列');
-      return;
+      return false;
     }
 
     setPlan(nextPlan);
@@ -667,7 +665,44 @@ export default function App() {
     );
 
     setView(nextPlan.length > 0 ? 'result' : 'home');
-    window.alert('已匯入進度。');
+    return true;
+  }
+
+  function importProgress() {
+    const raw = window.prompt('貼上先前匯出的進度 JSON（會覆蓋目前進度）');
+    if (!raw) return;
+
+    const parsed = safeParse(raw, null);
+    const ok = applyImportedProgress(parsed);
+    if (ok) window.alert('已匯入進度。');
+  }
+
+  function triggerImportFile() {
+    try {
+      importFileRef.current?.click?.();
+    } catch {
+      // ignore
+    }
+  }
+
+  async function importProgressFromFile(e) {
+    try {
+      const file = e?.target?.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      const parsed = safeParse(text, null);
+      const ok = applyImportedProgress(parsed);
+      if (ok) window.alert('已從檔案匯入進度。');
+    } catch {
+      window.alert('匯入失敗：請確認檔案是先前匯出的 JSON。');
+    } finally {
+      // allow re-selecting the same file
+      try {
+        if (e?.target) e.target.value = '';
+      } catch {
+        // ignore
+      }
+    }
   }
 
   function resetProgress() {
@@ -693,6 +728,14 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
+      <input
+        ref={importFileRef}
+        type="file"
+        accept="application/json,.json"
+        className="hidden"
+        onChange={importProgressFromFile}
+      />
+
       <div className="mx-auto max-w-3xl px-5 py-10">
         <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
@@ -827,9 +870,17 @@ export default function App() {
                         className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
                         type="button"
                         onClick={importProgress}
-                        title="從 JSON 匯入進度（會覆蓋目前進度）"
+                        title="貼上 JSON 匯入進度（會覆蓋目前進度）"
                       >
                         匯入進度
+                      </button>
+                      <button
+                        className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
+                        type="button"
+                        onClick={triggerImportFile}
+                        title="從先前匯出的 JSON 檔案匯入進度（會覆蓋目前進度）"
+                      >
+                        從檔案匯入
                       </button>
                       <button
                         className="rounded-lg border border-rose-300/20 bg-rose-500/10 px-4 py-2 text-sm text-rose-100 hover:bg-rose-500/15"
@@ -1037,9 +1088,18 @@ export default function App() {
                       className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
                       type="button"
                       onClick={importProgress}
-                      title="從 JSON 匯入進度（會覆蓋目前進度）"
+                      title="貼上 JSON 匯入進度（會覆蓋目前進度）"
                     >
                       匯入進度
+                    </button>
+
+                    <button
+                      className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
+                      type="button"
+                      onClick={triggerImportFile}
+                      title="從先前匯出的 JSON 檔案匯入進度（會覆蓋目前進度）"
+                    >
+                      從檔案匯入
                     </button>
 
                     <button
