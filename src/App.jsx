@@ -140,6 +140,17 @@ function storageRemove(key) {
   }
 }
 
+async function tryNativeShare({ title, text }) {
+  try {
+    // Mobile-friendly share sheet (iOS/Android). Requires a user gesture.
+    if (!navigator?.share) return false;
+    await navigator.share({ title, text });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function copyToClipboard(text) {
   try {
     await navigator?.clipboard?.writeText(text);
@@ -674,6 +685,11 @@ export default function App() {
       autoNext
     };
     const text = JSON.stringify(payload, null, 2);
+
+    // Prefer native share sheet on mobile; fall back to clipboard / download.
+    const shared = await tryNativeShare({ title: '化學覆習進度（JSON）', text });
+    if (shared) return;
+
     const ok = await copyToClipboard(text);
     if (ok) {
       window.alert('已複製進度 JSON 到剪貼簿。');
@@ -692,6 +708,11 @@ export default function App() {
 
   async function exportShareSummary() {
     const text = buildShareSummary();
+
+    // Prefer native share sheet on mobile; fall back to clipboard / download.
+    const shared = await tryNativeShare({ title: '化學覆習進度摘要', text });
+    if (shared) return;
+
     const ok = await copyToClipboard(text);
     if (ok) {
       window.alert('已複製摘要到剪貼簿。');
