@@ -898,6 +898,19 @@ export default function App() {
       exportedAt: nowIso,
       appVersion: APP_VERSION || undefined,
       buildTime: BUILD_TIME || undefined,
+      // Helpful debug metadata (kept optional + best-effort)
+      device: (() => {
+        try {
+          return {
+            userAgent: typeof navigator !== 'undefined' ? String(navigator.userAgent || '') : undefined,
+            language: typeof navigator !== 'undefined' ? String(navigator.language || '') : undefined,
+            standalone: Boolean(isStandalone),
+            online: Boolean(isOnline)
+          };
+        } catch {
+          return undefined;
+        }
+      })(),
       plan,
       dayIndex,
       answers,
