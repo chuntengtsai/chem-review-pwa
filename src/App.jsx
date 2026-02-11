@@ -382,7 +382,7 @@ export default function App() {
     }
   }
 
-  // persist state
+  // persist state (debounced to reduce synchronous localStorage churn on mobile)
   useEffect(() => {
     if (skipNextPersistRef.current) {
       skipNextPersistRef.current = false;
@@ -398,8 +398,15 @@ export default function App() {
       autoNext,
       savedAt: new Date().toISOString()
     };
-    storageSet(STORAGE_KEY, JSON.stringify(payload));
-    setSavedAt(payload.savedAt);
+
+    const t = window.setTimeout?.(() => {
+      storageSet(STORAGE_KEY, JSON.stringify(payload));
+      setSavedAt(payload.savedAt);
+    }, 250);
+
+    return () => {
+      if (t) window.clearTimeout?.(t);
+    };
   }, [plan, dayIndex, answers, dayProgress, revealed, autoNext]);
 
   const allQuestions = useMemo(() => getAllDiagnosticQuestions(), []);
