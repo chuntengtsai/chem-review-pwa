@@ -33,6 +33,18 @@ function cls(...xs) {
   return xs.filter(Boolean).join(' ');
 }
 
+function prefersReducedMotion() {
+  try {
+    return Boolean(window?.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+  } catch {
+    return false;
+  }
+}
+
+function scrollBehavior() {
+  return prefersReducedMotion() ? 'auto' : 'smooth';
+}
+
 function safeDomId(x) {
   return String(x || '').replace(/[^a-zA-Z0-9_-]/g, '_');
 }
@@ -695,7 +707,7 @@ export default function App() {
   // Small UX: when switching views, scroll to top so users don't get "stuck" mid-page.
   useEffect(() => {
     try {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: scrollBehavior() });
     } catch {
       // ignore
     }
@@ -709,7 +721,7 @@ export default function App() {
   useEffect(() => {
     if (view !== 'task') return;
     try {
-      document.getElementById('concept')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.getElementById('concept')?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
     } catch {
       // ignore
     }
