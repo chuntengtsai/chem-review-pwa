@@ -193,6 +193,67 @@ export default function App() {
     return s?.dayProgress && typeof s.dayProgress === 'object' ? s.dayProgress : {};
   });
 
+  // PWA install button (supported on Chromium-based browsers)
+  const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null);
+  const [isStandalone, setIsStandalone] = useState(() => {
+    try {
+      // iOS uses navigator.standalone; others use display-mode media query
+      return Boolean(window?.navigator?.standalone) || window?.matchMedia?.('(display-mode: standalone)')?.matches;
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    function updateStandalone() {
+      try {
+        setIsStandalone(Boolean(window?.navigator?.standalone) || window?.matchMedia?.('(display-mode: standalone)')?.matches);
+      } catch {
+        setIsStandalone(false);
+      }
+    }
+
+    /** @param {Event} e */
+    function onBeforeInstallPrompt(e) {
+      // Prevent the mini-infobar from appearing.
+      e.preventDefault();
+      setDeferredInstallPrompt(e);
+    }
+
+    function onAppInstalled() {
+      setDeferredInstallPrompt(null);
+      updateStandalone();
+    }
+
+    updateStandalone();
+    window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+    window.addEventListener('appinstalled', onAppInstalled);
+
+    // Some browsers update display-mode via media query changes.
+    const mq = window?.matchMedia?.('(display-mode: standalone)');
+    mq?.addEventListener?.('change', updateStandalone);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', onAppInstalled);
+      mq?.removeEventListener?.('change', updateStandalone);
+    };
+  }, []);
+
+  async function requestInstall() {
+    const promptEvent = deferredInstallPrompt;
+    if (!promptEvent?.prompt) return;
+
+    try {
+      await promptEvent.prompt();
+      // Some browsers expose userChoice; ignore if absent.
+      await promptEvent.userChoice?.catch?.(() => null);
+    } finally {
+      // The prompt can only be used once.
+      setDeferredInstallPrompt(null);
+    }
+  }
+
   // persist state
   useEffect(() => {
     const payload = {
@@ -502,6 +563,17 @@ export default function App() {
                       開始診斷
                     </button>
                   )}
+
+                  {!isStandalone && deferredInstallPrompt ? (
+                    <button
+                      className="rounded-lg border border-emerald-300/20 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-50 hover:bg-emerald-500/15"
+                      type="button"
+                      onClick={requestInstall}
+                      title="把 App 安裝到主畫面（支援的瀏覽器才會出現）"
+                    >
+                      安裝 App
+                    </button>
+                  ) : null}
 
                   {plan.length > 0 ? (
                     <>
