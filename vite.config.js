@@ -14,7 +14,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'robots.txt', 'pwa-icon.svg'],
+      includeAssets: ['favicon.svg', 'robots.txt', 'pwa-icon.svg', 'pwa-192.png', 'pwa-512.png', 'apple-touch-icon.png'],
       manifest: {
         name: '高一化學覆習（診斷 → 補洞）',
         short_name: '化學覆習',
@@ -26,6 +26,19 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
+            src: '/pwa-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/pwa-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            // Keep the SVG as an optional high-quality source for browsers that support it.
             src: '/pwa-icon.svg',
             sizes: '512x512',
             type: 'image/svg+xml',
