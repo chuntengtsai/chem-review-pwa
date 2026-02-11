@@ -675,19 +675,21 @@ export default function App() {
       return false;
     }
 
+    const clampedDayIndex = Math.max(0, Math.min(nextPlan.length - 1, nextDayIndex));
+
     setPlan(nextPlan);
-    setDayIndex(Math.max(0, Math.min(nextPlan.length - 1, nextDayIndex)));
+    setDayIndex(clampedDayIndex);
     setAnswers(nextAnswers);
     setDayProgress(nextDayProgress);
     setRevealed(nextRevealed);
     setAutoNext(nextAutoNext);
 
-    // Persist immediately
+    // Persist immediately (keep storage consistent with the clamped in-memory state)
     storageSet(
       STORAGE_KEY,
       JSON.stringify({
         plan: nextPlan,
-        dayIndex: nextDayIndex,
+        dayIndex: clampedDayIndex,
         answers: nextAnswers,
         dayProgress: nextDayProgress,
         revealed: nextRevealed,
