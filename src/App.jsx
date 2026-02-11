@@ -330,6 +330,27 @@ export default function App() {
     return Boolean(p.conceptDone && p.practiceDone);
   }, [dayProgress, dayIndex]);
 
+  const completedDays = useMemo(() => {
+    const total = plan.length || 0;
+    if (!total) return 0;
+    let done = 0;
+    for (let i = 0; i < total; i++) {
+      const p = dayProgress?.[i] || {};
+      if (p.conceptDone && p.practiceDone) done += 1;
+    }
+    return done;
+  }, [plan.length, dayProgress]);
+
+  const nextIncompleteDay = useMemo(() => {
+    const total = plan.length || 0;
+    if (!total) return null;
+    for (let i = 0; i < total; i++) {
+      const p = dayProgress?.[i] || {};
+      if (!(p.conceptDone && p.practiceDone)) return i;
+    }
+    return null;
+  }, [plan.length, dayProgress]);
+
   const chooseDiagnosticAnswer = useCallback(
     (qid, idx) => {
       setAnswers((p) => ({ ...p, [qid]: idx }));
@@ -792,8 +813,13 @@ export default function App() {
                 </div>
 
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                  <div className="text-sm text-white/70">
-                    7 日補洞路徑（示範）：第 1 天從最弱技能點開始。
+                  <div>
+                    <div className="text-sm text-white/70">7 日補洞路徑（示範）：第 1 天從最弱技能點開始。</div>
+                    {plan.length > 0 ? (
+                      <div className="mt-1 text-xs text-white/55">
+                        進度：已完成 {completedDays}/{plan.length} 天
+                      </div>
+                    ) : null}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button
@@ -803,6 +829,21 @@ export default function App() {
                     >
                       進入今日任務
                     </button>
+
+                    {nextIncompleteDay !== null ? (
+                      <button
+                        className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
+                        type="button"
+                        onClick={() => {
+                          setDayIndex(nextIncompleteDay);
+                          setView('task');
+                        }}
+                        title="跳到下一個未完成的 Day"
+                      >
+                        下一個未完成
+                      </button>
+                    ) : null}
+
                     <button
                       className="rounded-lg border border-rose-300/20 bg-rose-500/10 px-4 py-2 text-sm text-rose-100 hover:bg-rose-500/15"
                       type="button"
@@ -881,6 +922,17 @@ export default function App() {
                     >
                       跳到練習
                     </button>
+
+                    {nextIncompleteDay !== null && nextIncompleteDay !== dayIndex ? (
+                      <button
+                        className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                        type="button"
+                        onClick={() => setDayIndex(nextIncompleteDay)}
+                        title="跳到下一個未完成的 Day"
+                      >
+                        下一個未完成
+                      </button>
+                    ) : null}
                   </div>
                 </div>
                 <button
