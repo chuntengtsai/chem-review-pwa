@@ -823,6 +823,76 @@ export default function App() {
     window.prompt('你的瀏覽器不允許自動複製/下載。請手動複製以下文字：', text);
   }
 
+  const skillIdSet = useMemo(() => new Set(SKILLS.map((s) => s.id)), []);
+
+  const diagnosticMeta = useMemo(() => {
+    const qById = {};
+    for (const q of allQuestions) {
+      qById[q.id] = { choicesLen: Array.isArray(q.choices) ? q.choices.length : 0 };
+    }
+
+    const practiceIds = new Set();
+    for (const s of SKILLS) {
+      const qs = getPracticeQuestionsForSkill(s.id) || [];
+      for (const q of qs) practiceIds.add(q.id);
+    }
+
+    return { qById, practiceIds };
+  }, [allQuestions]);
+
+  function sanitizeImportedPlan(xs) {
+    if (!Array.isArray(xs)) return null;
+    return xs.filter((sid) => typeof sid === 'string' && skillIdSet.has(sid));
+  }
+
+  function sanitizeImportedAnswers(obj) {
+    const out = {};
+    if (!obj || typeof obj !== 'object') return out;
+
+    for (const [qid, v] of Object.entries(obj)) {
+      const meta = diagnosticMeta.qById[qid];
+      if (!meta) continue;
+
+      const n = typeof v === 'number' ? v : Number(v);
+      if (!Number.isFinite(n)) continue;
+      const i = Math.trunc(n);
+      if (i < 0 || i >= meta.choicesLen) continue;
+      out[qid] = i;
+    }
+
+    return out;
+  }
+
+  function sanitizeImportedRevealed(obj) {
+    const out = {};
+    if (!obj || typeof obj !== 'object') return out;
+
+    for (const [qid, v] of Object.entries(obj)) {
+      if (!diagnosticMeta.practiceIds.has(qid)) continue;
+      out[qid] = Boolean(v);
+    }
+
+    return out;
+  }
+
+  function sanitizeImportedDayProgress(obj, planLen) {
+    const out = {};
+    if (!obj || typeof obj !== 'object') return out;
+
+    for (const [k, v] of Object.entries(obj)) {
+      const day = Number(k);
+      if (!Number.isInteger(day)) continue;
+      if (day < 0 || day >= planLen) continue;
+      if (!v || typeof v !== 'object') continue;
+
+      out[day] = {
+        conceptDone: Boolean(v.conceptDone),
+        practiceDone: Boolean(v.practiceDone)
+      };
+    }
+
+    return out;
+  }
   function applyImportedProgress(parsed) {
     if (!parsed || typeof parsed !== 'object') {
       window.alert('格式不正確：不是 JSON 物件');
@@ -830,11 +900,11 @@ export default function App() {
     }
 
     // Minimal validation (keep it permissive)
-    const nextPlan = Array.isArray(parsed.plan) ? parsed.plan : null;
+    const nextPlan = sanitizeImportedPlan(parsed.plan);
     const nextDayIndex = typeof parsed.dayIndex === 'number' ? parsed.dayIndex : 0;
-    const nextAnswers = parsed.answers && typeof parsed.answers === 'object' ? parsed.answers : {};
-    const nextDayProgress = parsed.dayProgress && typeof parsed.dayProgress === 'object' ? parsed.dayProgress : {};
-    const nextRevealed = parsed.revealed && typeof parsed.revealed === 'object' ? parsed.revealed : {};
+    const nextAnswers = sanitizeImportedAnswers(parsed.answers);
+    const nextDayProgress = sanitizeImportedDayProgress(parsed.dayProgress, nextPlan?.length || 0);
+    const nextRevealed = sanitizeImportedRevealed(parsed.revealed);
     const nextAutoNext = typeof parsed.autoNext === 'boolean' ? parsed.autoNext : true;
     const importedSavedAt = typeof parsed.savedAt === 'string' ? parsed.savedAt : '';
     // If the export didn't include savedAt (older versions), treat the import as a fresh save.
