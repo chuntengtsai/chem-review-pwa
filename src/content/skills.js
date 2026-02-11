@@ -451,7 +451,7 @@ export const SKILLS = [
         kind: 'mc',
         stem: '從 2.0 M 儲備液取用多少 mL，稀釋成 250 mL 的 0.50 M？',
         choices: ['25', '50', '62.5', '125'],
-        answer: 1,
+        answer: 2,
         explanation: 'M1V1=M2V2 → 2.0·V1 = 0.50·0.250 → V1 = 0.0625 L = 62.5 mL。',
         wrongReasonTags: ['稀釋公式錯', 'mL/L換算錯']
       },
