@@ -31,7 +31,8 @@ function formatLocalTime(iso) {
 
 function formatFilenameTimestamp(d = new Date()) {
   // Use local time (Asia/Taipei) to generate filenames that are easier to find/compare on-device.
-  // Format: YYYYMMDD_HHmm
+  // Include seconds to avoid collisions when exporting multiple times within the same minute.
+  // Format: YYYYMMDD_HHmmss
   try {
     const parts = new Intl.DateTimeFormat('zh-TW', {
       timeZone: 'Asia/Taipei',
@@ -40,6 +41,7 @@ function formatFilenameTimestamp(d = new Date()) {
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
+      second: '2-digit',
       hourCycle: 'h23'
     })
       .formatToParts(d)
@@ -53,8 +55,9 @@ function formatFilenameTimestamp(d = new Date()) {
     const day = parts.day || '00';
     const hh = parts.hour || '00';
     const mm = parts.minute || '00';
+    const ss = parts.second || '00';
 
-    return `${y}${m}${day}_${hh}${mm}`;
+    return `${y}${m}${day}_${hh}${mm}${ss}`;
   } catch {
     // Fall back to ISO-ish (no colons) to keep filenames safe.
     return new Date().toISOString().replace(/[:.]/g, '-');
