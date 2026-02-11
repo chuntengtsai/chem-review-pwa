@@ -402,6 +402,18 @@ export default function App() {
     setView('result');
   }, [allQuestions, answers, perSkill]);
 
+  const regeneratePlan = useCallback(() => {
+    if (!plan?.length) return;
+    const ok = window.confirm('要用目前的診斷結果重新產生 7 日路徑嗎？（會重置路徑進度）');
+    if (!ok) return;
+    const newPlan = pickPlan(perSkill, 7);
+    setPlan(newPlan);
+    setDayIndex(0);
+    setDayProgress({});
+    setRevealed({});
+    setView('result');
+  }, [plan?.length, perSkill]);
+
   const chooseDiagnosticAnswer = useCallback(
     (qid, idx, atIndex) => {
       setAnswers((p) => ({ ...p, [qid]: idx }));
@@ -981,6 +993,15 @@ export default function App() {
                         下一個未完成
                       </button>
                     ) : null}
+
+                    <button
+                      className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
+                      type="button"
+                      onClick={regeneratePlan}
+                      title="用目前的診斷結果重新產生 7 日路徑（會重置路徑進度）"
+                    >
+                      重新產生路徑
+                    </button>
 
                     <button
                       className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
