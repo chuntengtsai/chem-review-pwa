@@ -1378,11 +1378,32 @@ export default function App() {
                     <button
                       className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
                       type="button"
-                      onClick={() =>
+                      onClick={() => {
+                        const cur = Boolean(dayProgress?.[dayIndex]?.practiceDone);
+                        if (cur) {
+                          setDayProgress((p) => ({
+                            ...p,
+                            [dayIndex]: { ...(p?.[dayIndex] || {}), practiceDone: false }
+                          }));
+                          return;
+                        }
+
+                        if (!allPracticeRevealed) {
+                          window.alert('先把本日練習題答案都看過/對過（可用「全部顯示」），再標記完成。');
+                          return;
+                        }
+
                         setDayProgress((p) => ({
                           ...p,
-                          [dayIndex]: { ...(p?.[dayIndex] || {}), practiceDone: !p?.[dayIndex]?.practiceDone }
-                        }))
+                          [dayIndex]: { ...(p?.[dayIndex] || {}), practiceDone: true }
+                        }));
+                      }}
+                      title={
+                        dayProgress?.[dayIndex]?.practiceDone
+                          ? '把練習標記回未完成'
+                          : !allPracticeRevealed
+                            ? '先把本日練習題答案都看過/對過（可用「全部顯示」），再標記完成'
+                            : '把練習標記為完成'
                       }
                     >
                       標記
