@@ -246,6 +246,14 @@ export default function App() {
   }
 
   function submitDiagnostic() {
+    // Guard: ensure the diagnostic is actually complete.
+    const firstUnanswered = allQuestions.findIndex((q) => answers?.[q.id] === undefined);
+    if (firstUnanswered >= 0) {
+      window.alert(`你還有題目沒作答（第 ${firstUnanswered + 1} 題）。先完成診斷再產生路徑。`);
+      setDiagIndex(firstUnanswered);
+      return;
+    }
+
     const newPlan = pickPlan(perSkill, 7);
     setPlan(newPlan);
     setDayIndex(0);
@@ -374,7 +382,7 @@ export default function App() {
             <div className="grid gap-4">
               <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-white/55">
                 <span>
-                  題目 {diagIndex + 1} / {allQuestions.length}
+                  題目 {diagIndex + 1} / {allQuestions.length} · 已作答 {answeredCount} / {allQuestions.length}
                 </span>
 
                 <div className="flex items-center gap-2">
