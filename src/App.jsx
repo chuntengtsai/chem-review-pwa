@@ -336,6 +336,9 @@ export default function App() {
   const [backOnline, setBackOnline] = useState(false);
   const prevOnlineRef = useRef(isOnline);
 
+  // Small UX: show a floating "scroll to top" button on long pages.
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
   useEffect(() => {
     // Probe storage availability early so we can warn immediately.
     // Some environments (e.g., Safari private mode) throw on localStorage writes.
@@ -464,6 +467,31 @@ export default function App() {
 
     prevOnlineRef.current = cur;
   }, [isOnline]);
+
+  useEffect(() => {
+    let raf = 0;
+
+    function onScroll() {
+      if (raf) return;
+      raf = window.requestAnimationFrame(() => {
+        raf = 0;
+        try {
+          const y = window.scrollY || window.pageYOffset || 0;
+          setShowScrollTop(y > 420);
+        } catch {
+          setShowScrollTop(false);
+        }
+      });
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, []);
 
   async function requestInstall() {
     const promptEvent = deferredInstallPrompt;
@@ -2350,13 +2378,30 @@ export default function App() {
 
       {buildInfoCopied ? (
         <div
-          className="fixed bottom-12 right-3 z-50 rounded-full border border-emerald-300/20 bg-emerald-500/10 px-3 py-1 text-[11px] text-emerald-50/90 backdrop-blur"
+          className="fixed bottom-20 right-3 z-50 rounded-full border border-emerald-300/20 bg-emerald-500/10 px-3 py-1 text-[11px] text-emerald-50/90 backdrop-blur"
           role="status"
           aria-live="polite"
           aria-atomic="true"
         >
           已複製版本資訊
         </div>
+      ) : null}
+
+      {showScrollTop ? (
+        <button
+          type="button"
+          className="fixed bottom-12 right-3 z-40 rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[11px] text-white/70 backdrop-blur hover:bg-black/45"
+          title="回到頂部"
+          onClick={() => {
+            try {
+              window.scrollTo({ top: 0, behavior: scrollBehavior() });
+            } catch {
+              // ignore
+            }
+          }}
+        >
+          回到頂部
+        </button>
       ) : null}
 
       {buildInfoText ? (
