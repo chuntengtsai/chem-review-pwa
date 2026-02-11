@@ -603,6 +603,12 @@ export default function App() {
       const q = currentQ;
       if (!q) return;
 
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setView('home');
+        return;
+      }
+
       const choicesLen = Array.isArray(q.choices) ? q.choices.length : 0;
       const k = String(e.key || '').toLowerCase();
 
@@ -1213,7 +1219,7 @@ export default function App() {
               </div>
 
               <div className="rounded-xl border border-white/10 bg-black/10 p-4 text-xs text-white/55">
-                設計目標：診斷題要能定位「技能點弱項」。MVP 先用每技能點 2 題做示範。小技巧：可用 1–4 或 A–D 作答、←/→ 換題、Enter 下一題。
+                設計目標：診斷題要能定位「技能點弱項」。MVP 先用每技能點 2 題做示範。小技巧：可用 1–4 或 A–D 作答、←/→ 換題、Enter 下一題、Esc 退出。
               </div>
             </div>
           ) : null}
