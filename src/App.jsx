@@ -775,7 +775,8 @@ export default function App() {
       answers,
       dayProgress,
       revealed,
-      autoNext
+      autoNext,
+      savedAt: savedAt || undefined
     };
     const text = JSON.stringify(payload, null, 2);
 
@@ -835,6 +836,9 @@ export default function App() {
     const nextDayProgress = parsed.dayProgress && typeof parsed.dayProgress === 'object' ? parsed.dayProgress : {};
     const nextRevealed = parsed.revealed && typeof parsed.revealed === 'object' ? parsed.revealed : {};
     const nextAutoNext = typeof parsed.autoNext === 'boolean' ? parsed.autoNext : true;
+    const importedSavedAt = typeof parsed.savedAt === 'string' ? parsed.savedAt : '';
+    // If the export didn't include savedAt (older versions), treat the import as a fresh save.
+    const effectiveSavedAt = importedSavedAt || new Date().toISOString();
 
     if (!nextPlan) {
       window.alert('格式不正確：plan 必須是陣列');
@@ -849,6 +853,7 @@ export default function App() {
     setDayProgress(nextDayProgress);
     setRevealed(nextRevealed);
     setAutoNext(nextAutoNext);
+    setSavedAt(effectiveSavedAt);
 
     // Persist immediately (keep storage consistent with the clamped in-memory state)
     storageSet(
@@ -860,7 +865,7 @@ export default function App() {
         dayProgress: nextDayProgress,
         revealed: nextRevealed,
         autoNext: nextAutoNext,
-        savedAt: new Date().toISOString()
+        savedAt: effectiveSavedAt
       })
     );
 
