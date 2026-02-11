@@ -308,6 +308,10 @@ export default function App() {
   }, [plan, dayIndex]);
 
   const answeredCount = useMemo(() => Object.keys(answers || {}).length, [answers]);
+  const answeredPct = useMemo(() => {
+    if (!allQuestions.length) return 0;
+    return Math.round((answeredCount / allQuestions.length) * 100);
+  }, [answeredCount, allQuestions.length]);
 
   const stepState = useMemo(() => {
     const diagDone = plan.length > 0; // plan exists only after submit
@@ -652,7 +656,7 @@ export default function App() {
             <div className="grid gap-4">
               <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-white/55">
                 <span>
-                  題目 {diagIndex + 1} / {allQuestions.length} · 已作答 {answeredCount} / {allQuestions.length}
+                  題目 {diagIndex + 1} / {allQuestions.length} · 已作答 {answeredCount} / {allQuestions.length}（{answeredPct}%）
                 </span>
 
                 <div className="flex items-center gap-2">
@@ -676,6 +680,10 @@ export default function App() {
                     退出
                   </button>
                 </div>
+              </div>
+
+              <div className="h-2 w-full overflow-hidden rounded-full border border-white/10 bg-black/10">
+                <div className="h-full bg-cyan-400/40" style={{ width: `${answeredPct}%` }} />
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
