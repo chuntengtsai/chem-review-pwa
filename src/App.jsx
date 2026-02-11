@@ -1034,7 +1034,7 @@ export default function App() {
               </div>
 
               <div className="rounded-xl border border-white/10 bg-black/10 p-4 text-sm text-white/65">
-                MVP 註：目前題庫是示範（3 個技能點）。接下來會擴到 12 個技能點、至少 145 題（25 診斷 + 120 補洞）。
+                MVP 註：目前題庫是示範（{SKILLS.length} 個技能點、診斷共 {allQuestions.length} 題）。接下來會擴到 12 個技能點、至少 145 題（25 診斷 + 120 補洞）。
               </div>
             </div>
           ) : null}
