@@ -218,6 +218,12 @@ export default function App() {
     return typeof s?.autoNext === 'boolean' ? s.autoNext : true;
   });
 
+  // tiny "autosave" indicator (helps users trust that progress won't vanish)
+  const [savedAt, setSavedAt] = useState(() => {
+    const s = loadPersistedState();
+    return typeof s?.savedAt === 'string' ? s.savedAt : '';
+  });
+
   // practice: revealed answers per question id
   const [revealed, setRevealed] = useState(() => {
     const s = loadPersistedState();
@@ -366,6 +372,7 @@ export default function App() {
       savedAt: new Date().toISOString()
     };
     storageSet(STORAGE_KEY, JSON.stringify(payload));
+    setSavedAt(payload.savedAt);
   }, [plan, dayIndex, answers, dayProgress, revealed, autoNext]);
 
   const allQuestions = useMemo(() => getAllDiagnosticQuestions(), []);
@@ -886,6 +893,7 @@ export default function App() {
           </div>
           <div className="flex items-center gap-2">
             {!isOnline ? <Badge tone="warn">離線</Badge> : null}
+            {savedAt ? <Badge tone="neutral">已儲存 {formatLocalTime(savedAt)}</Badge> : null}
             <Badge>React</Badge>
             <Badge>Vite</Badge>
             <Badge>Tailwind</Badge>
