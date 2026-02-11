@@ -1774,78 +1774,92 @@ export default function App() {
                   </div>
                 </div>
               ) : null}
-              <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-white/55">
-                <span>
-                  題目 {diagIndex + 1} / {allQuestions.length} · 已作答 {answeredCount} / {allQuestions.length}（{answeredPct}%）
-                  {unansweredCount > 0 ? ` · 未答 ${unansweredCount}` : ''}
-                </span>
-
-                <div className="flex items-center gap-2">
-                  <span className="hidden lg:inline text-white/35" title="鍵盤：按 ? 或 H 也可開啟快捷鍵說明" aria-hidden="true">
-                    按 ? 看快捷鍵
+              <div className="grid gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-white/55">
+                  <span>
+                    題目 {diagIndex + 1} / {allQuestions.length} · 已作答 {answeredCount} / {allQuestions.length}（{answeredPct}%）
+                    {unansweredCount > 0 ? ` · 未答 ${unansweredCount}` : ''}
                   </span>
-                  <button
-                    className={cls(
-                      'rounded-lg border px-3 py-1.5 text-xs hover:bg-white/10 disabled:opacity-50',
-                      'border-white/10 bg-white/5 text-white/75'
-                    )}
-                    type="button"
-                    disabled={firstUnansweredIndex < 0}
-                    onClick={() => {
-                      if (firstUnansweredIndex >= 0) setDiagIndex(firstUnansweredIndex);
-                    }}
-                    title={firstUnansweredIndex < 0 ? '全部題目已作答' : '跳到第一個未作答的題目'}
-                  >
-                    跳到未答
-                  </button>
 
-                  <button
-                    className={cls(
-                      'rounded-lg border px-3 py-1.5 text-xs hover:bg-white/10',
-                      autoNext ? 'border-cyan-300/30 bg-cyan-500/10 text-cyan-50' : 'border-white/10 bg-white/5 text-white/75'
-                    )}
-                    type="button"
-                    onClick={() => setAutoNext((v) => !v)}
-                    title="選完答案自動跳到下一題"
-                  >
-                    自動下一題：{autoNext ? '開' : '關'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="hidden lg:inline text-white/35"
+                      title="鍵盤：按 ? 或 H 也可開啟快捷鍵說明"
+                      aria-hidden="true"
+                    >
+                      按 ? 看快捷鍵
+                    </span>
+                    <button
+                      className={cls(
+                        'rounded-lg border px-3 py-1.5 text-xs hover:bg-white/10 disabled:opacity-50',
+                        'border-white/10 bg-white/5 text-white/75'
+                      )}
+                      type="button"
+                      disabled={firstUnansweredIndex < 0}
+                      onClick={() => {
+                        if (firstUnansweredIndex >= 0) setDiagIndex(firstUnansweredIndex);
+                      }}
+                      title={firstUnansweredIndex < 0 ? '全部題目已作答' : '跳到第一個未作答的題目'}
+                    >
+                      跳到未答
+                    </button>
 
-                  <button
-                    className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
-                    type="button"
-                    onClick={() => setShowShortcuts(true)}
-                    title="查看鍵盤快捷鍵（也可按 ? 或 H）"
-                  >
-                    快捷鍵
-                  </button>
+                    <button
+                      className={cls(
+                        'rounded-lg border px-3 py-1.5 text-xs hover:bg-white/10',
+                        autoNext ? 'border-cyan-300/30 bg-cyan-500/10 text-cyan-50' : 'border-white/10 bg-white/5 text-white/75'
+                      )}
+                      type="button"
+                      onClick={() => setAutoNext((v) => !v)}
+                      title="選完答案自動跳到下一題"
+                    >
+                      自動下一題：{autoNext ? '開' : '關'}
+                    </button>
 
-                  <button
-                    className="rounded-lg border border-rose-300/20 bg-rose-500/10 px-3 py-1.5 text-xs text-rose-100 hover:bg-rose-500/15"
-                    type="button"
-                    onClick={() => {
-                      const ok = window.confirm('要重置診斷作答嗎？（會清除目前已作答的診斷答案）');
-                      if (!ok) return;
-                      startDiagnostic({ reset: true });
-                    }}
-                    title="清除目前診斷作答，從第 1 題重新開始"
-                  >
-                    重置診斷
-                  </button>
+                    <button
+                      className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                      type="button"
+                      onClick={() => setShowShortcuts(true)}
+                      title="查看鍵盤快捷鍵（也可按 ? 或 H）"
+                    >
+                      快捷鍵
+                    </button>
 
-                  <button
-                    className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
-                    type="button"
-                    onClick={() => setView('home')}
-                  >
-                    退出
-                  </button>
+                    <button
+                      className="rounded-lg border border-rose-300/20 bg-rose-500/10 px-3 py-1.5 text-xs text-rose-100 hover:bg-rose-500/15"
+                      type="button"
+                      onClick={() => {
+                        const ok = window.confirm('要重置診斷作答嗎？（會清除目前已作答的診斷答案）');
+                        if (!ok) return;
+                        startDiagnostic({ reset: true });
+                      }}
+                      title="清除目前診斷作答，從第 1 題重新開始"
+                    >
+                      重置診斷
+                    </button>
+
+                    <button
+                      className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                      type="button"
+                      onClick={() => setView('home')}
+                    >
+                      退出
+                    </button>
                 </div>
               </div>
 
-              <div className="h-2 w-full overflow-hidden rounded-full border border-white/10 bg-black/10">
+              <div
+                className="h-2 w-full overflow-hidden rounded-full border border-white/10 bg-black/10"
+                role="progressbar"
+                aria-label="診斷完成度"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={answeredPct}
+                title={`診斷完成度：${answeredPct}%`}
+              >
                 <div className="h-full bg-cyan-400/40" style={{ width: `${answeredPct}%` }} />
               </div>
+            </div>
 
               <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
                 <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-white/60">
