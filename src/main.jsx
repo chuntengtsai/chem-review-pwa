@@ -5,8 +5,23 @@ import './index.css';
 import App from './App.jsx';
 
 // PWA: auto update service worker when a new version is available.
-registerSW({
-  immediate: true
+// Also surface a small UI hint when a refresh is needed.
+const updateSW = registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    try {
+      window.dispatchEvent(new CustomEvent('pwa:need-refresh', { detail: { updateSW } }));
+    } catch {
+      // ignore
+    }
+  },
+  onOfflineReady() {
+    try {
+      window.dispatchEvent(new CustomEvent('pwa:offline-ready'));
+    } catch {
+      // ignore
+    }
+  }
 });
 
 createRoot(document.getElementById('root')).render(

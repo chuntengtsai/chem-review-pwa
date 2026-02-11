@@ -239,6 +239,11 @@ export default function App() {
     }
   });
 
+  // PWA update hints
+  const [needRefresh, setNeedRefresh] = useState(false);
+  const [offlineReady, setOfflineReady] = useState(false);
+  const updateSWRef = useRef(null);
+
   // Network status (useful for PWA/offline usage)
   const [isOnline, setIsOnline] = useState(() => {
     try {
@@ -288,12 +293,33 @@ export default function App() {
     const mq = window?.matchMedia?.('(display-mode: standalone)');
     mq?.addEventListener?.('change', updateStandalone);
 
+    function onNeedRefresh(e) {
+      // event: CustomEvent<{ updateSW: (reloadPage?: boolean) => Promise<void> }>
+      try {
+        updateSWRef.current = e?.detail?.updateSW || null;
+      } catch {
+        updateSWRef.current = null;
+      }
+      setNeedRefresh(true);
+    }
+
+    function onOfflineReady() {
+      setOfflineReady(true);
+      // auto-hide after a bit (keep it subtle)
+      window.setTimeout?.(() => setOfflineReady(false), 3500);
+    }
+
+    window.addEventListener('pwa:need-refresh', onNeedRefresh);
+    window.addEventListener('pwa:offline-ready', onOfflineReady);
+
     return () => {
       window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
       window.removeEventListener('appinstalled', onAppInstalled);
       window.removeEventListener('online', updateOnline);
       window.removeEventListener('offline', updateOnline);
       mq?.removeEventListener?.('change', updateStandalone);
+      window.removeEventListener('pwa:need-refresh', onNeedRefresh);
+      window.removeEventListener('pwa:offline-ready', onOfflineReady);
     };
   }, []);
 
@@ -1435,9 +1461,45 @@ export default function App() {
         </footer>
       </div>
 
+      {offlineReady && !needRefresh ? (
+        <div className="fixed bottom-3 left-3 z-50 rounded-full border border-emerald-300/20 bg-emerald-500/10 px-3 py-1 text-[11px] text-emerald-50/90 backdrop-blur">
+          已可離線使用
+        </div>
+      ) : null}
+
+      {needRefresh ? (
+        <div className="fixed bottom-3 left-3 z-50 flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-500/10 px-3 py-1 text-[11px] text-cyan-50/90 backdrop-blur">
+          <span>有新版本可用</span>
+          <button
+            type="button"
+            className="rounded-full border border-cyan-200/20 bg-cyan-500/20 px-2 py-0.5 text-[11px] text-cyan-50 hover:bg-cyan-500/30"
+            onClick={async () => {
+              try {
+                const fn = updateSWRef.current;
+                setNeedRefresh(false);
+                await fn?.(true);
+              } catch {
+                // if update fails, keep the hint so user can try again
+                setNeedRefresh(true);
+              }
+            }}
+          >
+            重新整理更新
+          </button>
+          <button
+            type="button"
+            className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-white/70 hover:bg-white/10"
+            onClick={() => setNeedRefresh(false)}
+          >
+            稍後
+          </button>
+        </div>
+      ) : null}
+
       {buildLabel ? (
-        <div className="fixed bottom-3 right-3 z-50 rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[11px] text-white/65 backdrop-blur">
+        <div className="fixed bottom-3 right-3 z-40 rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[11px] text-white/65 backdrop-blur">
           最後部署：{buildLabel}
+          {APP_VERSION ? ` · v${APP_VERSION}` : ''}
         </div>
       ) : null}
     </div>
