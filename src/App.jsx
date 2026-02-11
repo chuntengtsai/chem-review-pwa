@@ -533,6 +533,8 @@ export default function App() {
     const lines = [];
     lines.push('高一化學覆習（診斷 → 補洞）進度摘要');
     lines.push(`匯出時間（台北）：${formatLocalTime(new Date().toISOString())}`);
+    const deployedAt = formatBuildTime(BUILD_TIME);
+    if (deployedAt) lines.push(`最後部署：${deployedAt}`);
 
     if (!plan?.length) {
       lines.push('尚未產生 7 日路徑（請先完成診斷）。');
