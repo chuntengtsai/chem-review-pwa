@@ -84,6 +84,42 @@ function safeDomId(x) {
   return String(x || '').replace(/[^a-zA-Z0-9_-]/g, '_');
 }
 
+// Deterministic shuffle (for practice question order)
+function hashStringToUint32(str) {
+  // FNV-1a 32-bit
+  let h = 0x811c9dc5;
+  const s = String(str || '');
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return h >>> 0;
+}
+
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function rng() {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function shuffledCopy(arr, seedStr) {
+  const xs = Array.isArray(arr) ? [...arr] : [];
+  if (xs.length <= 1) return xs;
+  const rng = mulberry32(hashStringToUint32(seedStr));
+  for (let i = xs.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    const tmp = xs[i];
+    xs[i] = xs[j];
+    xs[j] = tmp;
+  }
+  return xs;
+}
+
 function Badge({ children, tone = 'neutral' }) {
   const toneCls =
     tone === 'good'
@@ -290,10 +326,19 @@ export default function App() {
   const didAutoJumpToNextIncompleteRef = useRef(false);
   const skipNextPersistRef = useRef(false);
 
+  // Keep a stable seed basis so practice shuffles don't change just because we auto-save.
+  const initialSavedAtRef = useRef(typeof persisted?.savedAt === 'string' ? persisted.savedAt : '');
+
   // diagnostic UX
   const [autoNext, setAutoNext] = useState(() => {
     const s = persisted;
     return typeof s?.autoNext === 'boolean' ? s.autoNext : true;
+  });
+
+  // practice UX
+  const [shufflePractice, setShufflePractice] = useState(() => {
+    const s = persisted;
+    return typeof s?.shufflePractice === 'boolean' ? s.shufflePractice : false;
   });
 
   // tiny "autosave" indicator (helps users trust that progress won't vanish)
@@ -474,6 +519,7 @@ export default function App() {
           setDayProgress({});
           setRevealed({});
           setAutoNext(true);
+          setShufflePractice(false);
           setStorageWritable(true);
           return;
         }
@@ -494,6 +540,7 @@ export default function App() {
         setDayProgress(next.dayProgress && typeof next.dayProgress === 'object' ? next.dayProgress : {});
         setRevealed(next.revealed && typeof next.revealed === 'object' ? next.revealed : {});
         setAutoNext(typeof next.autoNext === 'boolean' ? next.autoNext : true);
+        setShufflePractice(typeof next.shufflePractice === 'boolean' ? next.shufflePractice : false);
         setSavedAt(typeof next.savedAt === 'string' ? next.savedAt : '');
         setStorageWritable(true);
       } catch {
@@ -620,6 +667,7 @@ export default function App() {
       dayProgress,
       revealed,
       autoNext,
+      shufflePractice,
       savedAt: new Date().toISOString()
     };
 
@@ -632,7 +680,7 @@ export default function App() {
     return () => {
       if (t) window.clearTimeout?.(t);
     };
-  }, [plan, dayIndex, answers, dayProgress, revealed, autoNext, persistNow]);
+  }, [plan, dayIndex, answers, dayProgress, revealed, autoNext, shufflePractice, persistNow]);
 
   // If the page is backgrounded/closed before the debounce fires (common on mobile),
   // flush the latest state so progress isn't lost.
@@ -1147,6 +1195,7 @@ export default function App() {
       dayProgress,
       revealed,
       autoNext,
+      shufflePractice,
       savedAt: savedAt || undefined
     };
     const text = JSON.stringify(payload, null, 2);
@@ -1300,6 +1349,7 @@ export default function App() {
     const nextDayProgress = sanitizeImportedDayProgress(parsed.dayProgress, nextPlan?.length || 0);
     const nextRevealed = sanitizeImportedRevealed(parsed.revealed);
     const nextAutoNext = typeof parsed.autoNext === 'boolean' ? parsed.autoNext : true;
+    const nextShufflePractice = typeof parsed.shufflePractice === 'boolean' ? parsed.shufflePractice : false;
     const importedSavedAt = typeof parsed.savedAt === 'string' ? parsed.savedAt : '';
     // If the export didn't include savedAt (older versions), treat the import as a fresh save.
     const effectiveSavedAt = importedSavedAt || new Date().toISOString();
@@ -1342,6 +1392,7 @@ export default function App() {
     setDayProgress(nextDayProgress);
     setRevealed(nextRevealed);
     setAutoNext(nextAutoNext);
+    setShufflePractice(nextShufflePractice);
     setSavedAt(effectiveSavedAt);
 
     // Persist immediately (keep storage consistent with the clamped in-memory state)
@@ -1354,6 +1405,7 @@ export default function App() {
         dayProgress: nextDayProgress,
         revealed: nextRevealed,
         autoNext: nextAutoNext,
+        shufflePractice: nextShufflePractice,
         savedAt: effectiveSavedAt
       })
     );
@@ -1558,7 +1610,15 @@ export default function App() {
     return parts.join(' · ');
   }, [buildLabel]);
 
-  const practiceQs = useMemo(() => getPracticeQuestionsForSkill(currentSkill?.id || ''), [currentSkill?.id]);
+  const practiceQs = useMemo(() => {
+    const base = getPracticeQuestionsForSkill(currentSkill?.id || '');
+    if (!shufflePractice) return base;
+
+    // Shuffle should be stable across refreshes (so "今天" doesn't feel random every open),
+    // but still differ by Day/Skill.
+    const seed = `${initialSavedAtRef.current || 'seed'}|${currentSkill?.id || ''}|day${dayIndex}`;
+    return shuffledCopy(base, seed);
+  }, [currentSkill?.id, shufflePractice, dayIndex]);
 
   // If a skill has 0 practice questions (e.g., during MVP expansion), don't block users from marking practice as done.
   // Treat "all revealed" as true when there is nothing to reveal.
@@ -2433,6 +2493,20 @@ export default function App() {
                         title="把本日練習題全部改回未顯示（方便重新自我測驗）"
                       >
                         重置本日練習
+                      </button>
+                    ) : null}
+
+                    {practiceQs.length > 1 ? (
+                      <button
+                        className={cls(
+                          'rounded-lg border px-3 py-1.5 text-xs hover:bg-white/10',
+                          shufflePractice ? 'border-cyan-300/30 bg-cyan-500/10 text-cyan-50' : 'border-white/10 bg-white/5 text-white/75'
+                        )}
+                        type="button"
+                        onClick={() => setShufflePractice((v) => !v)}
+                        title="把本日練習題順序改為固定亂序（避免背題號）；不同 Day/技能會有不同順序"
+                      >
+                        練習題亂序：{shufflePractice ? '開' : '關'}
                       </button>
                     ) : null}
 
