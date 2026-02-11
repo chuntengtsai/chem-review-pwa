@@ -47,7 +47,12 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,txt}']
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,txt}'],
+        // SPA offline support: when the user opens a deep link while offline,
+        // serve the cached app shell (index.html) instead of a Workbox 404.
+        navigateFallback: '/index.html',
+        // Don't hijack asset/file requests.
+        navigateFallbackDenylist: [/^\/assets\//]
       },
       devOptions: {
         enabled: true
