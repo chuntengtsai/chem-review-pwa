@@ -675,6 +675,15 @@ export default function App() {
     [autoNext, allQuestions.length, submitDiagnostic]
   );
 
+  const clearDiagnosticAnswer = useCallback((qid) => {
+    setAnswers((p) => {
+      if (!p || p[qid] === undefined) return p;
+      const next = { ...p };
+      delete next[qid];
+      return next;
+    });
+  }, []);
+
   // Small UX: when switching views, scroll to top so users don't get "stuck" mid-page.
   useEffect(() => {
     try {
@@ -1595,6 +1604,17 @@ export default function App() {
                         title="跳到第一個未作答的題目"
                       >
                         跳到未答
+                      </button>
+                    ) : null}
+
+                    {answers[currentQ.id] !== undefined ? (
+                      <button
+                        className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/70 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400/40"
+                        type="button"
+                        onClick={() => clearDiagnosticAnswer(currentQ.id)}
+                        title="清除本題作答"
+                      >
+                        清除本題
                       </button>
                     ) : null}
 
