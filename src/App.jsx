@@ -758,6 +758,9 @@ export default function App() {
     const raw = window.prompt('貼上先前匯出的進度 JSON（會覆蓋目前進度）');
     if (!raw) return;
 
+    const confirmOverwrite = window.confirm('要用匯入的進度覆蓋目前進度嗎？（此操作無法復原）');
+    if (!confirmOverwrite) return;
+
     const parsed = safeParse(raw, null);
     const ok = applyImportedProgress(parsed);
     if (ok) window.alert('已匯入進度。');
@@ -775,6 +778,12 @@ export default function App() {
     try {
       const file = e?.target?.files?.[0];
       if (!file) return;
+
+      const confirmOverwrite = window.confirm(
+        `要用「${file.name}」的進度覆蓋目前進度嗎？（此操作無法復原）`
+      );
+      if (!confirmOverwrite) return;
+
       const text = await file.text();
       const parsed = safeParse(text, null);
       const ok = applyImportedProgress(parsed);
