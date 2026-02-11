@@ -206,6 +206,9 @@ function loadPersistedState() {
 }
 
 export default function App() {
+  // Read persisted state once on initial mount (avoids repeated localStorage reads/JSON parses).
+  const persisted = useMemo(() => loadPersistedState(), []);
+
   const [view, setView] = useState('home'); // home|diagnostic|result|task
   const [diagIndex, setDiagIndex] = useState(0);
 
@@ -217,40 +220,40 @@ export default function App() {
 
   // diagnostic UX
   const [autoNext, setAutoNext] = useState(() => {
-    const s = loadPersistedState();
+    const s = persisted;
     return typeof s?.autoNext === 'boolean' ? s.autoNext : true;
   });
 
   // tiny "autosave" indicator (helps users trust that progress won't vanish)
   const [savedAt, setSavedAt] = useState(() => {
-    const s = loadPersistedState();
+    const s = persisted;
     return typeof s?.savedAt === 'string' ? s.savedAt : '';
   });
 
   // practice: revealed answers per question id
   const [revealed, setRevealed] = useState(() => {
-    const s = loadPersistedState();
+    const s = persisted;
     return s?.revealed && typeof s.revealed === 'object' ? s.revealed : {};
   });
 
   const [answers, setAnswers] = useState(() => {
-    const s = loadPersistedState();
+    const s = persisted;
     return s?.answers && typeof s.answers === 'object' ? s.answers : {};
   });
 
   const [plan, setPlan] = useState(() => {
-    const s = loadPersistedState();
+    const s = persisted;
     return Array.isArray(s?.plan) ? s.plan : [];
   }); // skillIds
 
   const [dayIndex, setDayIndex] = useState(() => {
-    const s = loadPersistedState();
+    const s = persisted;
     return typeof s?.dayIndex === 'number' ? s.dayIndex : 0;
   });
 
   // per day: { [dayIndex]: { conceptDone: boolean, practiceDone: boolean } }
   const [dayProgress, setDayProgress] = useState(() => {
-    const s = loadPersistedState();
+    const s = persisted;
     return s?.dayProgress && typeof s.dayProgress === 'object' ? s.dayProgress : {};
   });
 
