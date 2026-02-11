@@ -376,12 +376,46 @@ export default function App() {
       updateStandalone();
     }
 
+    function onStorage(e) {
+      // Cross-tab sync: if the user has the app open in multiple tabs/windows,
+      // keep progress consistent.
+      // Note: the "storage" event does not fire on the same document that writes.
+      try {
+        if (!e || e.key !== STORAGE_KEY) return;
+
+        // If state was cleared in another tab, reflect it (but keep the user in control).
+        if (e.newValue == null) return;
+
+        const next = safeParse(String(e.newValue || ''), null);
+        if (!next || typeof next !== 'object') return;
+
+        // Avoid immediately re-persisting and re-stamping savedAt.
+        skipNextPersistRef.current = true;
+
+        const nextPlan = Array.isArray(next.plan) ? next.plan : [];
+        const nextDayIndex = typeof next.dayIndex === 'number' ? next.dayIndex : 0;
+        const clampedDayIndex = Math.max(0, Math.min(nextPlan.length - 1, nextDayIndex));
+
+        setPlan(nextPlan);
+        setDayIndex(clampedDayIndex);
+        setAnswers(next.answers && typeof next.answers === 'object' ? next.answers : {});
+        setDayProgress(next.dayProgress && typeof next.dayProgress === 'object' ? next.dayProgress : {});
+        setRevealed(next.revealed && typeof next.revealed === 'object' ? next.revealed : {});
+        setAutoNext(typeof next.autoNext === 'boolean' ? next.autoNext : true);
+        setSavedAt(typeof next.savedAt === 'string' ? next.savedAt : '');
+        setStorageWritable(true);
+      } catch {
+        // ignore
+      }
+    }
+
     updateStandalone();
     updateOnline();
     window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
     window.addEventListener('appinstalled', onAppInstalled);
     window.addEventListener('online', updateOnline);
     window.addEventListener('offline', updateOnline);
+    window.addEventListener('storage', onStorage);
 
     // Some browsers update display-mode via media query changes.
     const mq = window?.matchMedia?.('(display-mode: standalone)');
@@ -411,6 +445,7 @@ export default function App() {
       window.removeEventListener('appinstalled', onAppInstalled);
       window.removeEventListener('online', updateOnline);
       window.removeEventListener('offline', updateOnline);
+      window.removeEventListener('storage', onStorage);
       mq?.removeEventListener?.('change', updateStandalone);
       window.removeEventListener('pwa:need-refresh', onNeedRefresh);
       window.removeEventListener('pwa:offline-ready', onOfflineReady);
