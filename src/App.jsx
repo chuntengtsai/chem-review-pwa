@@ -995,7 +995,7 @@ export default function App() {
 
   function resetProgress() {
     // keep minimal: clear persisted state + reset in-memory state
-    const ok = window.confirm('確定要重置進度？這會清除你的診斷結果與 7 日路徑。');
+    const ok = window.confirm('確定要重置進度？這會清除你的診斷結果與 7 日路徑。（建議先按「匯出進度」備份）');
     if (!ok) return;
 
     // Prevent the reactive "persist" effect from immediately re-writing an empty state
