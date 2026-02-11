@@ -153,6 +153,15 @@ export const SKILLS = [
         answer: 0,
         explanation: '40 + 12 + 3×16 = 100。',
         wrongReasonTags: ['括號/下標倍數錯', '加總錯']
+      },
+      {
+        id: 'mm_d3',
+        kind: 'mc',
+        stem: 'Al2(SO4)3 的式量為？(Al=27, S=32, O=16)',
+        choices: ['294', '342', '318', '360'],
+        answer: 1,
+        explanation: '2×27 + 3×(32 + 4×16) = 54 + 3×96 = 342。',
+        wrongReasonTags: ['括號倍數錯', '加總錯', '下標倍數漏掉']
       }
     ],
     practice: [
