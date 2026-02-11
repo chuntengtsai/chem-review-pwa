@@ -1,16 +1,42 @@
-# React + Vite
+# chem-review-pwa
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A tiny PWA MVP for reviewing Taiwanese high-school (Grade 10) chemistry via a simple loop:
+**diagnostic → weakness ranking → 7‑day plan → daily tasks (concept + practice) → recap**.
 
-Currently, two official plugins are available:
+## What’s inside
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- React + Vite + Tailwind
+- PWA (vite-plugin-pwa)
+  - Offline cache (Workbox)
+  - Auto-update + in-app “new version available” prompt
+- Local persistence (localStorage)
+  - Export/import progress as JSON
+  - Export a shareable text summary (weakest Top 3 + plan progress)
 
-## React Compiler
+## Quick start
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+npm run dev
+```
 
-## Expanding the ESLint configuration
+## Build / preview
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm run build
+npm run preview
+```
+
+## Version + build timestamp
+
+During build, `vite.config.js` injects:
+
+- `__APP_VERSION__` (from `package.json`)
+- `__BUILD_TIME__` (ISO timestamp at build time)
+
+The app shows these in the bottom-right “最後部署 / vX.Y.Z” badge.
+
+## Notes
+
+- This repo is intentionally an MVP; the question bank is currently a small demo set.
+- The PWA install button only appears when the browser fires `beforeinstallprompt` (mostly Chromium-based browsers).
