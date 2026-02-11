@@ -923,6 +923,27 @@ export default function App() {
                       跳到練習
                     </button>
 
+                    <button
+                      className={cls(
+                        'rounded-lg border px-3 py-1.5 text-xs hover:bg-white/10',
+                        todayDone ? 'border-emerald-300/20 bg-emerald-500/10 text-emerald-50' : 'border-white/10 bg-white/5 text-white/75'
+                      )}
+                      type="button"
+                      onClick={() =>
+                        setDayProgress((p) => ({
+                          ...p,
+                          [dayIndex]: {
+                            ...(p?.[dayIndex] || {}),
+                            conceptDone: !todayDone,
+                            practiceDone: !todayDone
+                          }
+                        }))
+                      }
+                      title={todayDone ? '把今天標記回未完成' : '一鍵把概念與練習都標記為已完成'}
+                    >
+                      {todayDone ? '取消今日完成' : '一鍵完成今日'}
+                    </button>
+
                     {nextIncompleteDay !== null && nextIncompleteDay !== dayIndex ? (
                       <button
                         className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
