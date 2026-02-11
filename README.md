@@ -27,6 +27,14 @@ npm run build
 npm run preview
 ```
 
+## Checks (lint + build)
+
+```bash
+npm test
+# or
+npm run check
+```
+
 ## Version + build timestamp
 
 During build, `vite.config.js` injects:
