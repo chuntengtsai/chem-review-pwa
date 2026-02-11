@@ -1721,13 +1721,23 @@ export default function App() {
       </div>
 
       {offlineReady && !needRefresh ? (
-        <div className="fixed bottom-3 left-3 z-50 rounded-full border border-emerald-300/20 bg-emerald-500/10 px-3 py-1 text-[11px] text-emerald-50/90 backdrop-blur">
+        <div
+          className="fixed bottom-3 left-3 z-50 rounded-full border border-emerald-300/20 bg-emerald-500/10 px-3 py-1 text-[11px] text-emerald-50/90 backdrop-blur"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           已可離線使用
         </div>
       ) : null}
 
       {needRefresh ? (
-        <div className="fixed bottom-3 left-3 z-50 flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-500/10 px-3 py-1 text-[11px] text-cyan-50/90 backdrop-blur">
+        <div
+          className="fixed bottom-3 left-3 z-50 flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-500/10 px-3 py-1 text-[11px] text-cyan-50/90 backdrop-blur"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           <span>有新版本可用</span>
           <button
             type="button"
