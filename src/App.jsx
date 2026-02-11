@@ -594,16 +594,22 @@ export default function App() {
                     const p = dayProgress?.[idx] || {};
                     const done = Boolean(p.conceptDone && p.practiceDone);
                     return (
-                      <div
+                      <button
                         key={`${sid}_${idx}`}
+                        type="button"
                         className={cls(
-                          'rounded-xl border p-3 text-sm',
+                          'w-full text-left rounded-xl border p-3 text-sm hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-cyan-400/40',
                           isToday
                             ? 'border-cyan-300/30 bg-cyan-500/10 text-cyan-50'
                             : done
                               ? 'border-emerald-300/20 bg-emerald-500/10 text-emerald-50'
                               : 'border-white/10 bg-black/10 text-white/75'
                         )}
+                        onClick={() => {
+                          setDayIndex(idx);
+                          setView('task');
+                        }}
+                        aria-label={`前往 Day ${idx + 1}: ${s?.name || sid}`}
                       >
                         <div className="flex items-center justify-between gap-3">
                           <div>
@@ -611,7 +617,8 @@ export default function App() {
                           </div>
                           {done ? <Badge tone="good">已完成</Badge> : isToday ? <Badge tone="info">今天</Badge> : <Badge>未開始</Badge>}
                         </div>
-                      </div>
+                        <div className="mt-1 text-xs text-white/45">點一下可直接進入該天任務</div>
+                      </button>
                     );
                   })}
                 </div>
