@@ -950,6 +950,33 @@ export default function App() {
                     ) : null}
 
                     <button
+                      className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
+                      type="button"
+                      onClick={exportShareSummary}
+                      title="把弱點 Top 3 + 7 日路徑摘要複製到剪貼簿（可分享給老師/同學）"
+                    >
+                      匯出摘要
+                    </button>
+
+                    <button
+                      className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
+                      type="button"
+                      onClick={exportProgress}
+                      title="把進度匯出成 JSON（可備份/換裝置）"
+                    >
+                      匯出進度
+                    </button>
+
+                    <button
+                      className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
+                      type="button"
+                      onClick={importProgress}
+                      title="從 JSON 匯入進度（會覆蓋目前進度）"
+                    >
+                      匯入進度
+                    </button>
+
+                    <button
                       className="rounded-lg border border-rose-300/20 bg-rose-500/10 px-4 py-2 text-sm text-rose-100 hover:bg-rose-500/15"
                       type="button"
                       onClick={resetProgress}
