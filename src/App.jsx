@@ -1370,6 +1370,24 @@ export default function App() {
                         下一個未完成
                       </button>
                     ) : null}
+
+                    <button
+                      className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                      type="button"
+                      onClick={exportShareSummary}
+                      title="把弱點 Top 3 + 7 日路徑摘要複製到剪貼簿（可分享給老師/同學）"
+                    >
+                      匯出摘要
+                    </button>
+
+                    <button
+                      className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                      type="button"
+                      onClick={exportProgress}
+                      title="把進度匯出成 JSON（可備份/換裝置）"
+                    >
+                      匯出進度
+                    </button>
                   </div>
                 </div>
                 <button
