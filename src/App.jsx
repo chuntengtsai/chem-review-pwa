@@ -169,8 +169,9 @@ export default function App() {
     return SKILLS.find((s) => s.id === sid) || null;
   }, [plan, dayIndex]);
 
+  const answeredCount = useMemo(() => Object.keys(answers || {}).length, [answers]);
+
   const stepState = useMemo(() => {
-    const answeredCount = Object.keys(answers || {}).length;
     const diagDone = plan.length > 0; // plan exists only after submit
     const inDiag = view === 'diagnostic';
     const inResult = view === 'result';
@@ -180,17 +181,25 @@ export default function App() {
       plan: diagDone ? (inResult ? 'active' : 'done') : 'todo',
       today: diagDone ? (inTask ? 'active' : 'todo') : 'todo'
     };
-  }, [answers, plan.length, view]);
+  }, [answeredCount, plan.length, view]);
 
   const todayDone = useMemo(() => {
     const p = dayProgress?.[dayIndex] || {};
     return Boolean(p.conceptDone && p.practiceDone);
   }, [dayProgress, dayIndex]);
 
-  function startDiagnostic() {
+  function startDiagnostic({ reset = false } = {}) {
     setView('diagnostic');
-    setDiagIndex(0);
-    setAnswers({});
+
+    if (reset) {
+      setAnswers({});
+      setDiagIndex(0);
+      return;
+    }
+
+    // resume at first unanswered question (if any)
+    const firstUnanswered = allQuestions.findIndex((q) => answers?.[q.id] === undefined);
+    setDiagIndex(firstUnanswered >= 0 ? firstUnanswered : 0);
   }
 
   function submitDiagnostic() {
@@ -256,13 +265,32 @@ export default function App() {
                   做一份簡短診斷（約 2–5 分鐘，先用示範題），得到你的補洞路徑。
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <button
-                    className="rounded-lg border border-white/10 bg-cyan-500/15 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/20"
-                    type="button"
-                    onClick={startDiagnostic}
-                  >
-                    開始診斷
-                  </button>
+                  {plan.length === 0 && answeredCount > 0 ? (
+                    <>
+                      <button
+                        className="rounded-lg border border-white/10 bg-cyan-500/15 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/20"
+                        type="button"
+                        onClick={() => startDiagnostic()}
+                      >
+                        繼續診斷（已答 {answeredCount} 題）
+                      </button>
+                      <button
+                        className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
+                        type="button"
+                        onClick={() => startDiagnostic({ reset: true })}
+                      >
+                        重新開始
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className="rounded-lg border border-white/10 bg-cyan-500/15 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/20"
+                      type="button"
+                      onClick={() => startDiagnostic({ reset: true })}
+                    >
+                      開始診斷
+                    </button>
+                  )}
 
                   {plan.length > 0 ? (
                     <>
