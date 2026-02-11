@@ -1125,10 +1125,13 @@ export default function App() {
                         type="button"
                         className={cls(
                           'w-full text-left rounded-xl border px-4 py-3 text-sm',
+                          'focus:outline-none focus:ring-2 focus:ring-cyan-400/40',
                           chosen
                             ? 'border-cyan-300/40 bg-cyan-500/10 text-cyan-50'
                             : 'border-white/10 bg-black/10 text-white/80 hover:bg-black/20'
                         )}
+                        aria-pressed={chosen}
+                        aria-label={`選擇 ${String.fromCharCode(65 + idx)}：${c}`}
                         onClick={() => chooseDiagnosticAnswer(currentQ.id, idx, diagIndex)}
                       >
                         {String.fromCharCode(65 + idx)}. {c}
@@ -1139,7 +1142,7 @@ export default function App() {
 
                 <div className="mt-4 flex items-center justify-between">
                   <button
-                    className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10 disabled:opacity-50"
+                    className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400/40 disabled:opacity-50"
                     type="button"
                     disabled={diagIndex === 0}
                     onClick={() => setDiagIndex((i) => Math.max(0, i - 1))}
@@ -1149,7 +1152,7 @@ export default function App() {
 
                   {diagIndex < allQuestions.length - 1 ? (
                     <button
-                      className="rounded-lg border border-white/10 bg-cyan-500/15 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/20 disabled:opacity-50"
+                      className="rounded-lg border border-white/10 bg-cyan-500/15 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/20 focus:outline-none focus:ring-2 focus:ring-cyan-400/40 disabled:opacity-50"
                       type="button"
                       disabled={answers[currentQ.id] === undefined}
                       onClick={() => setDiagIndex((i) => Math.min(allQuestions.length - 1, i + 1))}
@@ -1158,7 +1161,7 @@ export default function App() {
                     </button>
                   ) : (
                     <button
-                      className="rounded-lg border border-white/10 bg-cyan-500/15 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/20"
+                      className="rounded-lg border border-white/10 bg-cyan-500/15 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/20 focus:outline-none focus:ring-2 focus:ring-cyan-400/40"
                       type="button"
                       onClick={submitDiagnostic}
                     >
