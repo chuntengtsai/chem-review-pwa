@@ -496,6 +496,9 @@ export default function App() {
     }
     setPlan(newPlan);
     setDayIndex(0);
+    // Ensure a clean slate for the new 7-day path (avoid carrying over any old progress/reveals).
+    setDayProgress({});
+    setRevealed({});
     setView('result');
   }, [allQuestions, answers, perSkill]);
 
