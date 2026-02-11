@@ -1040,6 +1040,16 @@ export default function App() {
       return false;
     }
 
+    // Version warning (keep permissive: still allow importing older/newer exports).
+    // If version is missing, treat it as v1.
+    const importedVersion = Number(parsed.version ?? 1);
+    if (Number.isFinite(importedVersion) && importedVersion !== 1) {
+      const ok = window.confirm(
+        `這份進度檔的版本是 v${importedVersion}（目前 App 預期 v1）。仍要嘗試匯入嗎？\n\n（若匯入後顯示異常，可按「重置進度」並用新版重新匯出/匯入。）`
+      );
+      if (!ok) return false;
+    }
+
     // Minimal validation (keep it permissive)
     const nextPlan = sanitizeImportedPlan(parsed.plan);
     const nextDayIndex = typeof parsed.dayIndex === 'number' ? parsed.dayIndex : 0;
