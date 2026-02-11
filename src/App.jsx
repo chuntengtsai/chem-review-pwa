@@ -185,6 +185,7 @@ export default function App() {
   const [diagIndex, setDiagIndex] = useState(0);
 
   const importFileRef = useRef(null);
+  const didAutoJumpToNextIncompleteRef = useRef(false);
 
   // diagnostic UX
   const [autoNext, setAutoNext] = useState(() => {
@@ -382,6 +383,25 @@ export default function App() {
     }
     return null;
   }, [plan.length, dayProgress]);
+
+  // Small QoL: if the user previously left the app on a completed day,
+  // snap "today" to the next incomplete day when the app loads.
+  useEffect(() => {
+    if (didAutoJumpToNextIncompleteRef.current) return;
+    if (!plan?.length) return;
+    if (nextIncompleteDay === null) return;
+
+    const cur = dayProgress?.[dayIndex] || {};
+    const curDone = Boolean(cur.conceptDone && cur.practiceDone);
+    if (curDone && nextIncompleteDay !== dayIndex) {
+      didAutoJumpToNextIncompleteRef.current = true;
+      setDayIndex(nextIncompleteDay);
+      return;
+    }
+
+    // Mark as checked so we don't fight the user's navigation.
+    didAutoJumpToNextIncompleteRef.current = true;
+  }, [plan?.length, nextIncompleteDay, dayIndex, dayProgress]);
 
   function startDiagnostic({ reset = false } = {}) {
     setView('diagnostic');
