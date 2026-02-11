@@ -262,6 +262,19 @@ export default function App() {
     }
   });
 
+  // iOS Safari doesn't support `beforeinstallprompt`.
+  // Detect iOS so we can show a tiny "Add to Home Screen" hint.
+  const [isIOS] = useState(() => {
+    try {
+      const ua = String(navigator?.userAgent || '');
+      const isAppleTouch = /iPad|iPhone|iPod/.test(ua);
+      const isIpadOS13Plus = ua.includes('Macintosh') && Boolean(navigator?.maxTouchPoints) && navigator.maxTouchPoints > 1;
+      return Boolean(isAppleTouch || isIpadOS13Plus);
+    } catch {
+      return false;
+    }
+  });
+
   // PWA update hints
   const [needRefresh, setNeedRefresh] = useState(false);
   const [offlineReady, setOfflineReady] = useState(false);
@@ -981,6 +994,19 @@ export default function App() {
                       title="把 App 安裝到主畫面（支援的瀏覽器才會出現）"
                     >
                       安裝 App
+                    </button>
+                  ) : !isStandalone && isIOS ? (
+                    <button
+                      className="rounded-lg border border-emerald-300/20 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-50 hover:bg-emerald-500/15"
+                      type="button"
+                      onClick={() => {
+                        window.alert(
+                          'iPhone/iPad 安裝方式：\n1) 用 Safari 開啟本頁\n2) 點「分享」按鈕\n3) 選「加入主畫面」\n\n（iOS Safari 目前不支援自動跳出安裝提示，所以這裡改用提示說明。）'
+                        );
+                      }}
+                      title="iOS Safari 不支援自動安裝提示；點這裡看加入主畫面的方式"
+                    >
+                      加入主畫面（iOS）
                     </button>
                   ) : null}
 
