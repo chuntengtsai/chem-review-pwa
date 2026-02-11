@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { SKILLS, getAllDiagnosticQuestions, getPracticeQuestionsForSkill } from './content/skills.js';
 
 // eslint-disable-next-line no-undef
@@ -220,16 +220,20 @@ export default function App() {
     return Boolean(p.conceptDone && p.practiceDone);
   }, [dayProgress, dayIndex]);
 
-  function chooseDiagnosticAnswer(qid, idx) {
-    setAnswers((p) => ({ ...p, [qid]: idx }));
+  const chooseDiagnosticAnswer = useCallback(
+    (qid, idx) => {
+      setAnswers((p) => ({ ...p, [qid]: idx }));
 
-    if (!autoNext) return;
+      if (!autoNext) return;
 
-    // advance after selection (small delay to show highlight)
-    window.setTimeout(() => {
-      setDiagIndex((i) => Math.min(allQuestions.length - 1, i + 1));
-    }, 120);
-  }
+      // advance after selection (small delay to show highlight)
+      window.setTimeout(() => {
+        setDiagIndex((i) => Math.min(allQuestions.length - 1, i + 1));
+      }, 120);
+    },
+    [autoNext, allQuestions.length]
+  );
+
 
   function startDiagnostic({ reset = false } = {}) {
     setView('diagnostic');
@@ -245,7 +249,7 @@ export default function App() {
     setDiagIndex(firstUnanswered >= 0 ? firstUnanswered : 0);
   }
 
-  function submitDiagnostic() {
+  const submitDiagnostic = useCallback(() => {
     // Guard: ensure the diagnostic is actually complete.
     const firstUnanswered = allQuestions.findIndex((q) => answers?.[q.id] === undefined);
     if (firstUnanswered >= 0) {
@@ -258,7 +262,71 @@ export default function App() {
     setPlan(newPlan);
     setDayIndex(0);
     setView('result');
-  }
+  }, [allQuestions, answers, perSkill]);
+  // Keyboard shortcuts (desktop-friendly):
+  // - 1-4 or A-D: choose option
+  // - ←/→: prev/next (→ requires current answered)
+  // - Enter: next/submit
+  useEffect(() => {
+    if (view !== 'diagnostic') return;
+
+    function onKeyDown(e) {
+      // avoid interfering with browser/OS shortcuts
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      const q = currentQ;
+      if (!q) return;
+
+      const choicesLen = Array.isArray(q.choices) ? q.choices.length : 0;
+      const k = String(e.key || '').toLowerCase();
+
+      // A-D
+      if (k.length === 1 && k >= 'a' && k <= 'd') {
+        const idx = k.charCodeAt(0) - 'a'.charCodeAt(0);
+        if (idx >= 0 && idx < choicesLen) {
+          e.preventDefault();
+          chooseDiagnosticAnswer(q.id, idx);
+        }
+        return;
+      }
+
+      // 1-4
+      if (k.length === 1 && k >= '1' && k <= '4') {
+        const idx = Number(k) - 1;
+        if (idx >= 0 && idx < choicesLen) {
+          e.preventDefault();
+          chooseDiagnosticAnswer(q.id, idx);
+        }
+        return;
+      }
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setDiagIndex((i) => Math.max(0, i - 1));
+        return;
+      }
+
+      if (e.key === 'ArrowRight') {
+        if (answers?.[q.id] === undefined) return;
+        e.preventDefault();
+        setDiagIndex((i) => Math.min(allQuestions.length - 1, i + 1));
+        return;
+      }
+
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (diagIndex < allQuestions.length - 1) {
+          if (answers?.[q.id] === undefined) return;
+          setDiagIndex((i) => Math.min(allQuestions.length - 1, i + 1));
+        } else {
+          submitDiagnostic();
+        }
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [view, currentQ, answers, diagIndex, allQuestions.length, chooseDiagnosticAnswer, submitDiagnostic]);
 
   function goTodayTask() {
     setView('task');
@@ -467,7 +535,7 @@ export default function App() {
               </div>
 
               <div className="rounded-xl border border-white/10 bg-black/10 p-4 text-xs text-white/55">
-                設計目標：診斷題要能定位「技能點弱項」。MVP 先用每技能點 2 題做示範。
+                設計目標：診斷題要能定位「技能點弱項」。MVP 先用每技能點 2 題做示範。小技巧：可用 1–4 或 A–D 作答、←/→ 換題、Enter 下一題。
               </div>
             </div>
           ) : null}
