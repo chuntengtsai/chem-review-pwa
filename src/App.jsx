@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SKILLS, getAllDiagnosticQuestions, getPracticeQuestionsForSkill } from './content/skills.js';
 
 // eslint-disable-next-line no-undef
@@ -26,11 +26,33 @@ function cls(...xs) {
   return xs.filter(Boolean).join(' ');
 }
 
-function Badge({ children }) {
+function Badge({ children, tone = 'neutral' }) {
+  const toneCls =
+    tone === 'good'
+      ? 'border-emerald-300/30 bg-emerald-500/10 text-emerald-50'
+      : tone === 'warn'
+        ? 'border-amber-300/30 bg-amber-500/10 text-amber-50'
+        : tone === 'info'
+          ? 'border-cyan-300/30 bg-cyan-500/10 text-cyan-50'
+          : 'border-white/10 bg-white/5 text-white/80';
   return (
-    <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs text-white/80">
-      {children}
-    </span>
+    <span className={cls('inline-flex items-center rounded-full border px-2 py-0.5 text-xs', toneCls)}>{children}</span>
+  );
+}
+
+function StepPill({ label, state }) {
+  // state: done|active|todo
+  const s =
+    state === 'done'
+      ? { tone: 'good', text: '已完成' }
+      : state === 'active'
+        ? { tone: 'info', text: '進行中' }
+        : { tone: 'neutral', text: '未開始' };
+  return (
+    <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/15 px-3 py-2">
+      <div className="text-xs text-white/75">{label}</div>
+      <Badge tone={s.tone}>{s.text}</Badge>
+    </div>
   );
 }
 
@@ -68,6 +90,16 @@ function pickPlan(perSkill, days = 7) {
   return plan;
 }
 
+const STORAGE_KEY = 'chem-review-pwa.state.v1';
+
+function safeParse(json, fallback) {
+  try {
+    return JSON.parse(json);
+  } catch {
+    return fallback;
+  }
+}
+
 export default function App() {
   const [view, setView] = useState('home'); // home|diagnostic|result|task
   const [diagIndex, setDiagIndex] = useState(0);
@@ -75,6 +107,34 @@ export default function App() {
 
   const [plan, setPlan] = useState([]); // skillIds
   const [dayIndex, setDayIndex] = useState(0);
+
+  // per day: { [dayIndex]: { conceptDone: boolean, practiceDone: boolean } }
+  const [dayProgress, setDayProgress] = useState({});
+  const diagnosticDone = useMemo(() => Object.keys(answers || {}).length > 0 && plan.length > 0, [answers, plan]);
+
+  // load persisted state
+  useEffect(() => {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const s = safeParse(raw, null);
+    if (!s || typeof s !== 'object') return;
+    if (Array.isArray(s.plan)) setPlan(s.plan);
+    if (typeof s.dayIndex === 'number') setDayIndex(s.dayIndex);
+    if (s.answers && typeof s.answers === 'object') setAnswers(s.answers);
+    if (s.dayProgress && typeof s.dayProgress === 'object') setDayProgress(s.dayProgress);
+  }, []);
+
+  // persist state
+  useEffect(() => {
+    const payload = {
+      plan,
+      dayIndex,
+      answers,
+      dayProgress,
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  }, [plan, dayIndex, answers, dayProgress]);
 
   const allQuestions = useMemo(() => getAllDiagnosticQuestions(), []);
 
@@ -92,6 +152,24 @@ export default function App() {
     const sid = plan[dayIndex];
     return SKILLS.find((s) => s.id === sid) || null;
   }, [plan, dayIndex]);
+
+  const stepState = useMemo(() => {
+    const answeredCount = Object.keys(answers || {}).length;
+    const diagDone = plan.length > 0; // plan exists only after submit
+    const inDiag = view === 'diagnostic';
+    const inResult = view === 'result';
+    const inTask = view === 'task';
+    return {
+      diag: diagDone ? 'done' : inDiag ? 'active' : answeredCount > 0 ? 'active' : 'todo',
+      plan: diagDone ? (inResult ? 'active' : 'done') : 'todo',
+      today: diagDone ? (inTask ? 'active' : 'todo') : 'todo'
+    };
+  }, [answers, plan.length, view]);
+
+  const todayDone = useMemo(() => {
+    const p = dayProgress?.[dayIndex] || {};
+    return Boolean(p.conceptDone && p.practiceDone);
+  }, [dayProgress, dayIndex]);
 
   function startDiagnostic() {
     setView('diagnostic');
@@ -131,6 +209,12 @@ export default function App() {
         </header>
 
         <section className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-5">
+          <div className="mb-5 grid gap-2 md:grid-cols-3">
+            <StepPill label="1. 診斷" state={stepState.diag} />
+            <StepPill label="2. 路徑" state={stepState.plan} />
+            <StepPill label="3. 今日任務" state={stepState.today} />
+          </div>
+
           {view === 'home' ? (
             <div className="grid gap-4">
               <div className="rounded-xl border border-white/10 bg-black/20 p-4">
@@ -146,6 +230,25 @@ export default function App() {
                   >
                     開始診斷
                   </button>
+
+                  {plan.length > 0 ? (
+                    <>
+                      <button
+                        className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
+                        type="button"
+                        onClick={() => setView('result')}
+                      >
+                        看我的路徑
+                      </button>
+                      <button
+                        className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
+                        type="button"
+                        onClick={() => setView('task')}
+                      >
+                        進入今日任務
+                      </button>
+                    </>
+                  ) : null}
                 </div>
               </div>
 
@@ -274,6 +377,8 @@ export default function App() {
                   {plan.map((sid, idx) => {
                     const s = SKILLS.find((x) => x.id === sid);
                     const isToday = idx === dayIndex;
+                    const p = dayProgress?.[idx] || {};
+                    const done = Boolean(p.conceptDone && p.practiceDone);
                     return (
                       <div
                         key={`${sid}_${idx}`}
@@ -281,10 +386,17 @@ export default function App() {
                           'rounded-xl border p-3 text-sm',
                           isToday
                             ? 'border-cyan-300/30 bg-cyan-500/10 text-cyan-50'
-                            : 'border-white/10 bg-black/10 text-white/75'
+                            : done
+                              ? 'border-emerald-300/20 bg-emerald-500/10 text-emerald-50'
+                              : 'border-white/10 bg-black/10 text-white/75'
                         )}
                       >
-                        Day {idx + 1}: {s?.name || sid}
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            Day {idx + 1}: {s?.name || sid}
+                          </div>
+                          {done ? <Badge tone="good">已完成</Badge> : isToday ? <Badge tone="info">今天</Badge> : <Badge>未開始</Badge>}
+                        </div>
                       </div>
                     );
                   })}
@@ -298,10 +410,28 @@ export default function App() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="text-xs tracking-widest text-white/50">TODAY</div>
-                  <div className="mt-1 text-base font-semibold text-white/90">
-                    Day {dayIndex + 1}: {currentSkill?.name || '—'}
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <div className="text-base font-semibold text-white/90">Day {dayIndex + 1}: {currentSkill?.name || '—'}</div>
+                    {todayDone ? <Badge tone="good">今日完成</Badge> : <Badge tone="warn">未完成</Badge>}
                   </div>
                   <div className="mt-1 text-sm text-white/65">{currentSkill?.blurb}</div>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                      type="button"
+                      onClick={() => document.getElementById('concept')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    >
+                      跳到概念
+                    </button>
+                    <button
+                      className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                      type="button"
+                      onClick={() => document.getElementById('practice')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    >
+                      跳到練習
+                    </button>
+                  </div>
                 </div>
                 <button
                   className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/75 hover:bg-white/10"
@@ -312,8 +442,25 @@ export default function App() {
                 </button>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
-                <div className="text-xs tracking-widest text-white/50">CONCEPT</div>
+              <div id="concept" className="scroll-mt-6 rounded-2xl border border-white/10 bg-black/20 p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-xs tracking-widest text-white/50">CONCEPT</div>
+                  <div className="flex items-center gap-2">
+                    {dayProgress?.[dayIndex]?.conceptDone ? <Badge tone="good">已完成</Badge> : <Badge>未完成</Badge>}
+                    <button
+                      className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                      type="button"
+                      onClick={() =>
+                        setDayProgress((p) => ({
+                          ...p,
+                          [dayIndex]: { ...(p?.[dayIndex] || {}), conceptDone: !p?.[dayIndex]?.conceptDone }
+                        }))
+                      }
+                    >
+                      標記
+                    </button>
+                  </div>
+                </div>
                 <div className="mt-2 text-sm leading-relaxed text-white/80">
                   先用 1 句話抓重點：把這個技能點的「定義」與「公式/關係式」背成一句話，然後用 8–12 題快速驗證。
                 </div>
@@ -323,8 +470,25 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
-                <div className="text-xs tracking-widest text-white/50">PRACTICE</div>
+              <div id="practice" className="scroll-mt-6 rounded-2xl border border-white/10 bg-black/20 p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-xs tracking-widest text-white/50">PRACTICE</div>
+                  <div className="flex items-center gap-2">
+                    {dayProgress?.[dayIndex]?.practiceDone ? <Badge tone="good">已完成</Badge> : <Badge>未完成</Badge>}
+                    <button
+                      className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                      type="button"
+                      onClick={() =>
+                        setDayProgress((p) => ({
+                          ...p,
+                          [dayIndex]: { ...(p?.[dayIndex] || {}), practiceDone: !p?.[dayIndex]?.practiceDone }
+                        }))
+                      }
+                    >
+                      標記
+                    </button>
+                  </div>
+                </div>
                 <div className="mt-2 text-sm text-white/65">
                   MVP Demo：暫用診斷題當練習題（之後每技能點會有 10 題練習）。
                 </div>
