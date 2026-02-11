@@ -248,6 +248,9 @@ export default function App() {
 
   const [showShortcuts, setShowShortcuts] = useState(false);
 
+  // QoL: allow importing an exported progress JSON by drag & drop (desktop)
+  const [dragImportActive, setDragImportActive] = useState(false);
+
   const importFileRef = useRef(null);
   const didAutoJumpToNextIncompleteRef = useRef(false);
   const skipNextPersistRef = useRef(false);
@@ -1344,6 +1347,65 @@ export default function App() {
     }
   }
 
+  // QoL: drag & drop import (desktop). Drop an exported JSON anywhere on the page.
+  function isProbablyProgressJsonFile(file) {
+    if (!file) return false;
+    const name = String(file.name || '').toLowerCase();
+    const type = String(file.type || '').toLowerCase();
+    if (name.endsWith('.json')) return true;
+    if (type.includes('json')) return true;
+    return false;
+  }
+
+  function onDragEnterImport(e) {
+    try {
+      if (!isProbablyProgressJsonFile(e?.dataTransfer?.items?.[0]?.getAsFile?.())) return;
+    } catch {
+      // ignore
+    }
+    e.preventDefault();
+    setDragImportActive(true);
+  }
+
+  function onDragOverImport(e) {
+    e.preventDefault();
+    // Keep it sticky while hovering.
+    if (!dragImportActive) setDragImportActive(true);
+  }
+
+  function onDragLeaveImport(e) {
+    // Only deactivate when leaving the root element (not when moving between children).
+    if (e?.currentTarget && e?.relatedTarget && e.currentTarget.contains(e.relatedTarget)) return;
+    setDragImportActive(false);
+  }
+
+  async function onDropImport(e) {
+    e.preventDefault();
+    setDragImportActive(false);
+
+    try {
+      const file = e?.dataTransfer?.files?.[0];
+      if (!file) return;
+      if (!isProbablyProgressJsonFile(file)) {
+        window.alert('這看起來不是 JSON 檔。請拖放先前匯出的進度 .json。');
+        return;
+      }
+
+      const confirmOverwrite = window.confirm(
+        `要用「${file.name}」的進度覆蓋目前進度嗎？（此操作無法復原）`
+      );
+      if (!confirmOverwrite) return;
+
+      const text = await file.text();
+      const parsed = safeParse(text, null);
+      const ok = applyImportedProgress(parsed);
+      if (ok) window.alert('已從拖放檔案匯入進度。');
+      else window.alert('匯入失敗：檔案內容看起來不是有效的進度 JSON。');
+    } catch {
+      window.alert('匯入失敗：請確認檔案是先前匯出的 JSON。');
+    }
+  }
+
   function resetProgress() {
     // keep minimal: clear persisted state + reset in-memory state
     const ok = window.confirm('確定要重置進度？這會清除你的診斷結果與 7 日路徑。（建議先按「匯出進度」備份）');
@@ -1386,7 +1448,13 @@ export default function App() {
   const firstUnrevealedPractice = useMemo(() => practiceQs.find((q) => !revealed?.[q.id]) || null, [practiceQs, revealed]);
 
   return (
-    <div className="min-h-screen">
+    <div
+      className="min-h-screen"
+      onDragEnter={onDragEnterImport}
+      onDragOver={onDragOverImport}
+      onDragLeave={onDragLeaveImport}
+      onDrop={onDropImport}
+    >
       <input
         ref={importFileRef}
         type="file"
@@ -1394,6 +1462,16 @@ export default function App() {
         className="hidden"
         onChange={importProgressFromFile}
       />
+
+      {dragImportActive ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-cyan-300/25 bg-black/60 p-5 text-center">
+            <div className="text-xs tracking-widest text-cyan-100/70">IMPORT</div>
+            <div className="mt-2 text-base font-medium text-cyan-50">放開以匯入進度 JSON</div>
+            <div className="mt-2 text-xs text-white/60">（會覆蓋目前進度；僅接受先前匯出的 .json）</div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="mx-auto max-w-3xl px-5 py-10">
         <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
