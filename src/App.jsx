@@ -112,6 +112,12 @@ export default function App() {
   const [view, setView] = useState('home'); // home|diagnostic|result|task
   const [diagIndex, setDiagIndex] = useState(0);
 
+  // diagnostic UX
+  const [autoNext, setAutoNext] = useState(() => {
+    const s = loadPersistedState();
+    return typeof s?.autoNext === 'boolean' ? s.autoNext : true;
+  });
+
   // practice: revealed answers per question id
   const [revealed, setRevealed] = useState(() => {
     const s = loadPersistedState();
@@ -147,10 +153,11 @@ export default function App() {
       answers,
       dayProgress,
       revealed,
+      autoNext,
       savedAt: new Date().toISOString()
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  }, [plan, dayIndex, answers, dayProgress, revealed]);
+  }, [plan, dayIndex, answers, dayProgress, revealed, autoNext]);
 
   const allQuestions = useMemo(() => getAllDiagnosticQuestions(), []);
 
@@ -187,6 +194,17 @@ export default function App() {
     const p = dayProgress?.[dayIndex] || {};
     return Boolean(p.conceptDone && p.practiceDone);
   }, [dayProgress, dayIndex]);
+
+  function chooseDiagnosticAnswer(qid, idx) {
+    setAnswers((p) => ({ ...p, [qid]: idx }));
+
+    if (!autoNext) return;
+
+    // advance after selection (small delay to show highlight)
+    window.setTimeout(() => {
+      setDiagIndex((i) => Math.min(allQuestions.length - 1, i + 1));
+    }, 120);
+  }
 
   function startDiagnostic({ reset = false } = {}) {
     setView('diagnostic');
@@ -328,17 +346,32 @@ export default function App() {
 
           {view === 'diagnostic' ? (
             <div className="grid gap-4">
-              <div className="flex items-center justify-between gap-3 text-xs text-white/55">
+              <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-white/55">
                 <span>
                   題目 {diagIndex + 1} / {allQuestions.length}
                 </span>
-                <button
-                  className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
-                  type="button"
-                  onClick={() => setView('home')}
-                >
-                  退出
-                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    className={cls(
+                      'rounded-lg border px-3 py-1.5 text-xs hover:bg-white/10',
+                      autoNext ? 'border-cyan-300/30 bg-cyan-500/10 text-cyan-50' : 'border-white/10 bg-white/5 text-white/75'
+                    )}
+                    type="button"
+                    onClick={() => setAutoNext((v) => !v)}
+                    title="選完答案自動跳到下一題"
+                  >
+                    自動下一題：{autoNext ? '開' : '關'}
+                  </button>
+
+                  <button
+                    className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                    type="button"
+                    onClick={() => setView('home')}
+                  >
+                    退出
+                  </button>
+                </div>
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
@@ -356,9 +389,7 @@ export default function App() {
                             ? 'border-cyan-300/40 bg-cyan-500/10 text-cyan-50'
                             : 'border-white/10 bg-black/10 text-white/80 hover:bg-black/20'
                         )}
-                        onClick={() => {
-                          setAnswers((p) => ({ ...p, [currentQ.id]: idx }));
-                        }}
+                        onClick={() => chooseDiagnosticAnswer(currentQ.id, idx)}
                       >
                         {String.fromCharCode(65 + idx)}. {c}
                       </button>
