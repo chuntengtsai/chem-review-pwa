@@ -106,17 +106,22 @@ function computeMastery(skills, answersByQid) {
 }
 
 function pickPlan(perSkill, days = 7) {
-  const ranked = Object.entries(perSkill)
-    .map(([skillId, v]) => ({ skillId, mastery: v.mastery }))
+  const allRanked = Object.entries(perSkill)
+    .map(([skillId, v]) => ({ skillId, mastery: v.mastery, total: v.total ?? 0 }))
     .sort((a, b) => a.mastery - b.mastery);
+
+  // Prefer skills that have at least 1 diagnostic question.
+  // Otherwise "0%" can come from "no data" (total=0), which would incorrectly dominate the plan.
+  const ranked = allRanked.filter((x) => (x.total ?? 0) > 0);
 
   // Simple: rotate through weakest skills.
   // Guard: if we somehow have no skills, return an empty plan instead of [undefined...].
-  if (!ranked.length) return [];
+  const pool = ranked.length ? ranked : allRanked;
+  if (!pool.length) return [];
 
   const plan = [];
   for (let i = 0; i < days; i++) {
-    plan.push(ranked[i % ranked.length].skillId);
+    plan.push(pool[i % pool.length].skillId);
   }
   return plan;
 }
