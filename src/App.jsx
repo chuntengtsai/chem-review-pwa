@@ -305,6 +305,10 @@ export default function App() {
     }
   });
 
+  // Small UX: when the user goes offline then returns online, show a tiny confirmation toast.
+  const [backOnline, setBackOnline] = useState(false);
+  const prevOnlineRef = useRef(isOnline);
+
   useEffect(() => {
     // Probe storage availability early so we can warn immediately.
     // Some environments (e.g., Safari private mode) throw on localStorage writes.
@@ -385,6 +389,19 @@ export default function App() {
       window.removeEventListener('pwa:offline-ready', onOfflineReady);
     };
   }, []);
+
+  useEffect(() => {
+    const prev = Boolean(prevOnlineRef.current);
+    const cur = Boolean(isOnline);
+
+    // Only toast when transitioning from offline -> online.
+    if (!prev && cur) {
+      setBackOnline(true);
+      window.setTimeout?.(() => setBackOnline(false), 2000);
+    }
+
+    prevOnlineRef.current = cur;
+  }, [isOnline]);
 
   async function requestInstall() {
     const promptEvent = deferredInstallPrompt;
@@ -1968,6 +1985,17 @@ export default function App() {
           aria-atomic="true"
         >
           已可離線使用
+        </div>
+      ) : null}
+
+      {backOnline && isOnline ? (
+        <div
+          className="fixed bottom-12 left-3 z-50 rounded-full border border-cyan-300/20 bg-cyan-500/10 px-3 py-1 text-[11px] text-cyan-50/90 backdrop-blur"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          已恢復連線
         </div>
       ) : null}
 
