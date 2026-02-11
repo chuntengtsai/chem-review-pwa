@@ -29,6 +29,38 @@ function formatLocalTime(iso) {
   }
 }
 
+function formatFilenameTimestamp(d = new Date()) {
+  // Use local time (Asia/Taipei) to generate filenames that are easier to find/compare on-device.
+  // Format: YYYYMMDD_HHmm
+  try {
+    const parts = new Intl.DateTimeFormat('zh-TW', {
+      timeZone: 'Asia/Taipei',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23'
+    })
+      .formatToParts(d)
+      .reduce((acc, p) => {
+        if (p.type && p.value) acc[p.type] = p.value;
+        return acc;
+      }, /** @type {Record<string,string>} */ ({}));
+
+    const y = parts.year || '0000';
+    const m = parts.month || '00';
+    const day = parts.day || '00';
+    const hh = parts.hour || '00';
+    const mm = parts.minute || '00';
+
+    return `${y}${m}${day}_${hh}${mm}`;
+  } catch {
+    // Fall back to ISO-ish (no colons) to keep filenames safe.
+    return new Date().toISOString().replace(/[:.]/g, '-');
+  }
+}
+
 function cls(...xs) {
   return xs.filter(Boolean).join(' ');
 }
@@ -1036,8 +1068,9 @@ export default function App() {
   }
 
   async function exportProgress() {
-    const nowIso = new Date().toISOString();
-    const ts = nowIso.replace(/[:.]/g, '-');
+    const now = new Date();
+    const nowIso = now.toISOString();
+    const ts = formatFilenameTimestamp(now);
 
     const payload = {
       version: 1,
@@ -1093,8 +1126,9 @@ export default function App() {
   }
 
   async function exportShareSummary() {
-    const nowIso = new Date().toISOString();
-    const ts = nowIso.replace(/[:.]/g, '-');
+    const now = new Date();
+    const nowIso = now.toISOString();
+    const ts = formatFilenameTimestamp(now);
 
     const text = buildShareSummary();
 
