@@ -363,6 +363,12 @@ export default function App() {
     return done;
   }, [plan.length, dayProgress]);
 
+  const completedPctPlan = useMemo(() => {
+    const total = plan.length || 0;
+    if (!total) return 0;
+    return Math.round((completedDays / total) * 100);
+  }, [completedDays, plan.length]);
+
   const nextIncompleteDay = useMemo(() => {
     const total = plan.length || 0;
     if (!total) return null;
@@ -966,8 +972,13 @@ export default function App() {
                   <div>
                     <div className="text-sm text-white/70">7 日補洞路徑（示範）：第 1 天從最弱技能點開始。</div>
                     {plan.length > 0 ? (
-                      <div className="mt-1 text-xs text-white/55">
-                        進度：已完成 {completedDays}/{plan.length} 天
+                      <div className="mt-1 grid gap-2">
+                        <div className="text-xs text-white/55">
+                          進度：已完成 {completedDays}/{plan.length} 天（{completedPctPlan}%）
+                        </div>
+                        <div className="h-2 w-full overflow-hidden rounded-full border border-white/10 bg-black/10">
+                          <div className="h-full bg-emerald-400/40" style={{ width: `${completedPctPlan}%` }} />
+                        </div>
                       </div>
                     ) : null}
                   </div>
