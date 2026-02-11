@@ -1384,6 +1384,29 @@ export default function App() {
                       {todayDone ? '取消今日完成' : '一鍵完成今日'}
                     </button>
 
+                    <button
+                      className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                      type="button"
+                      onClick={() => {
+                        const ok = window.confirm('要重置「今天」的進度嗎？（會把概念/練習標記清掉，並把本日練習題答案改回未顯示）');
+                        if (!ok) return;
+
+                        setDayProgress((p) => ({
+                          ...p,
+                          [dayIndex]: { ...(p?.[dayIndex] || {}), conceptDone: false, practiceDone: false }
+                        }));
+
+                        setRevealed((p) => {
+                          const next = { ...(p || {}) };
+                          for (const q of practiceQs) next[q.id] = false;
+                          return next;
+                        });
+                      }}
+                      title="重置今天的概念/練習完成狀態，並把本日練習題答案全部改回未顯示"
+                    >
+                      重置今日
+                    </button>
+
                     {nextIncompleteDay !== null && nextIncompleteDay !== dayIndex ? (
                       <button
                         className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
