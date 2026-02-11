@@ -1200,6 +1200,33 @@ export default function App() {
                 </div>
               ) : null}
 
+              {!storageWritable ? (
+                <div className="rounded-xl border border-amber-300/20 bg-amber-500/10 p-4">
+                  <div className="text-xs tracking-widest text-amber-100/80">WARNING</div>
+                  <div className="mt-2 text-sm text-amber-50/90">
+                    你的瀏覽器目前可能無法保存進度（localStorage 被停用/隱私模式）。建議你定期用「匯出進度」做備份（JSON），換裝置也能匯入。
+                  </div>
+                  {answeredCount > 0 || plan.length > 0 ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        className="rounded-lg border border-amber-300/20 bg-amber-500/15 px-4 py-2 text-sm text-amber-50 hover:bg-amber-500/20"
+                        type="button"
+                        onClick={exportProgress}
+                      >
+                        立即備份（匯出進度）
+                      </button>
+                      <button
+                        className="rounded-lg border border-amber-300/20 bg-black/10 px-4 py-2 text-sm text-amber-50/90 hover:bg-black/20"
+                        type="button"
+                        onClick={importProgress}
+                      >
+                        從剪貼簿匯入
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
               <div className="rounded-xl border border-white/10 bg-black/20 p-4">
                 <div className="text-xs tracking-widest text-white/50">START</div>
                 <div className="mt-2 text-sm text-white/75">
@@ -1283,6 +1310,18 @@ export default function App() {
                         匯出摘要
                       </button>
                       <button
+                        className="rounded-lg border border-rose-300/20 bg-rose-500/10 px-4 py-2 text-sm text-rose-100 hover:bg-rose-500/15"
+                        type="button"
+                        onClick={resetProgress}
+                      >
+                        重置進度
+                      </button>
+                    </>
+                  ) : null}
+
+                  {answeredCount > 0 || plan.length > 0 ? (
+                    <>
+                      <button
                         className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
                         type="button"
                         onClick={exportProgress}
@@ -1305,13 +1344,6 @@ export default function App() {
                         title="從先前匯出的 JSON 檔案匯入進度（會覆蓋目前進度）"
                       >
                         從檔案匯入
-                      </button>
-                      <button
-                        className="rounded-lg border border-rose-300/20 bg-rose-500/10 px-4 py-2 text-sm text-rose-100 hover:bg-rose-500/15"
-                        type="button"
-                        onClick={resetProgress}
-                      >
-                        重置進度
                       </button>
                     </>
                   ) : null}
