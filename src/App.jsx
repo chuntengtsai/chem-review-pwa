@@ -1127,7 +1127,6 @@ export default function App() {
 
   async function exportShareSummary() {
     const now = new Date();
-    const nowIso = now.toISOString();
     const ts = formatFilenameTimestamp(now);
 
     const text = buildShareSummary();
@@ -2337,22 +2336,47 @@ export default function App() {
                     ) : null}
 
                     {firstUnrevealedPractice ? (
-                      <button
-                        className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
-                        type="button"
-                        onClick={() => {
-                          try {
-                            document
-                              .getElementById(`pq_${safeDomId(firstUnrevealedPractice.id)}`)
-                              ?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
-                          } catch {
-                            // ignore
-                          }
-                        }}
-                        title="跳到第一題尚未顯示答案的練習題"
-                      >
-                        跳到未顯示
-                      </button>
+                      <>
+                        <button
+                          className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                          type="button"
+                          onClick={() => {
+                            try {
+                              document
+                                .getElementById(`pq_${safeDomId(firstUnrevealedPractice.id)}`)
+                                ?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
+                            } catch {
+                              // ignore
+                            }
+                          }}
+                          title="跳到第一題尚未顯示答案的練習題"
+                        >
+                          跳到未顯示
+                        </button>
+                        <button
+                          className="rounded-lg border border-emerald-300/20 bg-emerald-500/10 px-3 py-1.5 text-xs text-emerald-50 hover:bg-emerald-500/15"
+                          type="button"
+                          onClick={() => {
+                            try {
+                              setRevealed((p) => ({ ...p, [firstUnrevealedPractice.id]: true }));
+                              window.setTimeout?.(() => {
+                                try {
+                                  document
+                                    .getElementById(`pq_${safeDomId(firstUnrevealedPractice.id)}`)
+                                    ?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
+                                } catch {
+                                  // ignore
+                                }
+                              }, 0);
+                            } catch {
+                              // ignore
+                            }
+                          }}
+                          title="直接顯示下一題尚未顯示的答案（並跳到該題）"
+                        >
+                          顯示下一題答案
+                        </button>
+                      </>
                     ) : null}
 
                     <button
