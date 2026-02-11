@@ -1938,14 +1938,14 @@ export default function App() {
                     <button
                       className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
                       type="button"
-                      onClick={() => document.getElementById('concept')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                      onClick={() => document.getElementById('concept')?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })}
                     >
                       跳到概念
                     </button>
                     <button
                       className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
                       type="button"
-                      onClick={() => document.getElementById('practice')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                      onClick={() => document.getElementById('practice')?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })}
                     >
                       跳到練習
                     </button>
@@ -2159,7 +2159,7 @@ export default function App() {
                           try {
                             document
                               .getElementById(`pq_${safeDomId(firstUnrevealedPractice.id)}`)
-                              ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              ?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
                           } catch {
                             // ignore
                           }
