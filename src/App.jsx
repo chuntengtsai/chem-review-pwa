@@ -391,8 +391,24 @@ export default function App() {
       try {
         if (!e || e.key !== STORAGE_KEY) return;
 
-        // If state was cleared in another tab, reflect it (but keep the user in control).
-        if (e.newValue == null) return;
+        // If state was cleared in another tab, reflect it here too.
+        // (Example: user hits "重置進度" in another window.)
+        if (e.newValue == null) {
+          // Avoid immediately re-persisting an empty/default state.
+          skipNextPersistRef.current = true;
+
+          setSavedAt('');
+          setView('home');
+          setDiagIndex(0);
+          setAnswers({});
+          setPlan([]);
+          setDayIndex(0);
+          setDayProgress({});
+          setRevealed({});
+          setAutoNext(true);
+          setStorageWritable(true);
+          return;
+        }
 
         const next = safeParse(String(e.newValue || ''), null);
         if (!next || typeof next !== 'object') return;
