@@ -379,6 +379,35 @@ export default function App() {
   // Small UX: show a floating "scroll to top" button on long pages.
   const [showScrollTop, setShowScrollTop] = useState(false);
 
+  // Small UX: non-blocking toast for common actions (copy/export/import).
+  const [toast, setToast] = useState(null); // { msg: string, tone?: 'neutral'|'good'|'warn'|'info' }
+  const toastTimerRef = useRef(0);
+  const notify = useCallback((msg, tone = 'neutral', ms = 2200) => {
+    try {
+      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    } catch {
+      // ignore
+    }
+
+    setToast({ msg: String(msg || ''), tone });
+
+    try {
+      toastTimerRef.current = window.setTimeout(() => setToast(null), ms);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      try {
+        if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+      } catch {
+        // ignore
+      }
+    };
+  }, []);
+
   useEffect(() => {
     // Probe storage availability early so we can warn immediately.
     // Some environments (e.g., Safari private mode) throw on localStorage writes.
@@ -1112,13 +1141,13 @@ export default function App() {
 
     const ok = await copyToClipboard(text);
     if (ok) {
-      window.alert('已複製進度 JSON 到剪貼簿。');
+      notify('已複製進度 JSON 到剪貼簿。', 'good');
       return;
     }
 
     const downloaded = downloadText({ filename: `chem-review-progress_${ts}.json`, text });
     if (downloaded) {
-      window.alert('你的瀏覽器不允許自動複製。我已改用「下載檔案」備份進度（JSON）。');
+      notify('你的瀏覽器不允許自動複製。我已改用「下載檔案」備份進度（JSON）。', 'info', 3200);
       return;
     }
 
@@ -1143,13 +1172,13 @@ export default function App() {
 
     const ok = await copyToClipboard(text);
     if (ok) {
-      window.alert('已複製摘要到剪貼簿。');
+      notify('已複製摘要到剪貼簿。', 'good');
       return;
     }
 
     const downloaded = downloadText({ filename: `chem-review-summary_${ts}.txt`, text });
     if (downloaded) {
-      window.alert('你的瀏覽器不允許自動複製。我已改用「下載檔案」匯出摘要（txt）。');
+      notify('你的瀏覽器不允許自動複製。我已改用「下載檔案」匯出摘要（txt）。', 'info', 3200);
       return;
     }
 
@@ -2549,6 +2578,26 @@ export default function App() {
           aria-atomic="true"
         >
           已恢復連線
+        </div>
+      ) : null}
+
+      {toast?.msg ? (
+        <div
+          className={cls(
+            'fixed bottom-20 left-3 z-50 rounded-full border px-3 py-1 text-[11px] backdrop-blur',
+            toast.tone === 'good'
+              ? 'border-emerald-300/20 bg-emerald-500/10 text-emerald-50/90'
+              : toast.tone === 'warn'
+                ? 'border-amber-300/20 bg-amber-500/10 text-amber-50/90'
+                : toast.tone === 'info'
+                  ? 'border-cyan-300/20 bg-cyan-500/10 text-cyan-50/90'
+                  : 'border-white/10 bg-white/5 text-white/85'
+          )}
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {toast.msg}
         </div>
       ) : null}
 
