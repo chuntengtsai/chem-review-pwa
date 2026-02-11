@@ -1575,7 +1575,7 @@ export default function App() {
                   })}
                 </div>
 
-                <div className="mt-4 flex items-center justify-between">
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
                   <button
                     className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400/40 disabled:opacity-50"
                     type="button"
@@ -1585,24 +1585,38 @@ export default function App() {
                     上一題
                   </button>
 
-                  {diagIndex < allQuestions.length - 1 ? (
-                    <button
-                      className="rounded-lg border border-white/10 bg-cyan-500/15 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/20 focus:outline-none focus:ring-2 focus:ring-cyan-400/40 disabled:opacity-50"
-                      type="button"
-                      disabled={answers[currentQ.id] === undefined}
-                      onClick={() => setDiagIndex((i) => Math.min(allQuestions.length - 1, i + 1))}
-                    >
-                      下一題
-                    </button>
-                  ) : (
-                    <button
-                      className="rounded-lg border border-white/10 bg-cyan-500/15 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/20 focus:outline-none focus:ring-2 focus:ring-cyan-400/40"
-                      type="button"
-                      onClick={submitDiagnostic}
-                    >
-                      送出診斷
-                    </button>
-                  )}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {firstUnansweredIndex >= 0 ? (
+                      <button
+                        className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/70 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400/40 disabled:opacity-50"
+                        type="button"
+                        disabled={firstUnansweredIndex === diagIndex}
+                        onClick={() => setDiagIndex(firstUnansweredIndex)}
+                        title="跳到第一個未作答的題目"
+                      >
+                        跳到未答
+                      </button>
+                    ) : null}
+
+                    {diagIndex < allQuestions.length - 1 ? (
+                      <button
+                        className="rounded-lg border border-white/10 bg-cyan-500/15 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/20 focus:outline-none focus:ring-2 focus:ring-cyan-400/40 disabled:opacity-50"
+                        type="button"
+                        disabled={answers[currentQ.id] === undefined}
+                        onClick={() => setDiagIndex((i) => Math.min(allQuestions.length - 1, i + 1))}
+                      >
+                        下一題
+                      </button>
+                    ) : (
+                      <button
+                        className="rounded-lg border border-white/10 bg-cyan-500/15 px-4 py-2 text-sm text-cyan-100 hover:bg-cyan-500/20 focus:outline-none focus:ring-2 focus:ring-cyan-400/40"
+                        type="button"
+                        onClick={submitDiagnostic}
+                      >
+                        送出診斷
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
