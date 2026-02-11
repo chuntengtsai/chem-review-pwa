@@ -153,6 +153,23 @@ async function copyToClipboard(text) {
   }
 }
 
+function downloadText({ filename, text }) {
+  try {
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function loadPersistedState() {
   const raw = storageGet(STORAGE_KEY);
   if (!raw) return null;
@@ -549,21 +566,37 @@ export default function App() {
     };
     const text = JSON.stringify(payload, null, 2);
     const ok = await copyToClipboard(text);
-    if (!ok) {
-      window.prompt('你的瀏覽器不允許自動複製。請手動複製以下文字：', text);
-    } else {
+    if (ok) {
       window.alert('已複製進度 JSON 到剪貼簿。');
+      return;
     }
+
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    const downloaded = downloadText({ filename: `chem-review-progress_${ts}.json`, text });
+    if (downloaded) {
+      window.alert('你的瀏覽器不允許自動複製。我已改用「下載檔案」備份進度（JSON）。');
+      return;
+    }
+
+    window.prompt('你的瀏覽器不允許自動複製/下載。請手動複製以下文字：', text);
   }
 
   async function exportShareSummary() {
     const text = buildShareSummary();
     const ok = await copyToClipboard(text);
-    if (!ok) {
-      window.prompt('你的瀏覽器不允許自動複製。請手動複製以下文字：', text);
-    } else {
+    if (ok) {
       window.alert('已複製摘要到剪貼簿。');
+      return;
     }
+
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    const downloaded = downloadText({ filename: `chem-review-summary_${ts}.txt`, text });
+    if (downloaded) {
+      window.alert('你的瀏覽器不允許自動複製。我已改用「下載檔案」匯出摘要（txt）。');
+      return;
+    }
+
+    window.prompt('你的瀏覽器不允許自動複製/下載。請手動複製以下文字：', text);
   }
 
   function importProgress() {
