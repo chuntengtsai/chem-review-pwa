@@ -1422,8 +1422,21 @@ export default function App() {
                         </div>
 
                         {isRevealed ? (
-                          <div className="mt-2 text-xs text-white/55">
-                            答案：{String.fromCharCode(65 + q.answer)} · {q.explanation}
+                          <div className="mt-2 grid gap-2 text-xs text-white/55">
+                            <div>
+                              答案：{String.fromCharCode(65 + q.answer)} · {q.explanation}
+                            </div>
+
+                            {Array.isArray(q?.wrongReasonTags) && q.wrongReasonTags.length > 0 ? (
+                              <div className="flex flex-wrap items-center gap-1 text-white/50">
+                                <span className="mr-1">常見錯因：</span>
+                                {q.wrongReasonTags.map((t) => (
+                                  <Badge key={t} tone="warn">
+                                    {t}
+                                  </Badge>
+                                ))}
+                              </div>
+                            ) : null}
                           </div>
                         ) : (
                           <div className="mt-2 text-xs text-white/45">先自己做 30–60 秒，再按「顯示答案」對答案與錯因。</div>
