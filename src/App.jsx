@@ -2373,6 +2373,7 @@ export default function App() {
           <span>有新版本可用</span>
           <button
             type="button"
+            aria-label="重新整理以更新到新版本"
             className="rounded-full border border-cyan-200/20 bg-cyan-500/20 px-2 py-0.5 text-[11px] text-cyan-50 hover:bg-cyan-500/30"
             onClick={async () => {
               try {
@@ -2389,6 +2390,7 @@ export default function App() {
           </button>
           <button
             type="button"
+            aria-label="稍後再更新"
             className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-white/70 hover:bg-white/10"
             onClick={() => setNeedRefresh(false)}
           >
@@ -2411,6 +2413,7 @@ export default function App() {
       {showScrollTop ? (
         <button
           type="button"
+          aria-label="回到頁面頂部"
           className="fixed bottom-12 right-3 z-40 rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[11px] text-white/70 backdrop-blur hover:bg-black/45"
           title="回到頂部"
           onClick={() => {
@@ -2428,6 +2431,7 @@ export default function App() {
       {buildInfoText ? (
         <button
           type="button"
+          aria-label="複製版本與最後部署資訊"
           className="fixed bottom-3 right-3 z-40 rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[11px] text-white/65 backdrop-blur hover:bg-black/45"
           title="點一下複製版本資訊（方便回報問題）"
           onClick={async () => {
