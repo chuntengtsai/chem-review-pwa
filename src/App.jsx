@@ -695,6 +695,34 @@ export default function App() {
 
           {view === 'home' ? (
             <div className="grid gap-4">
+              {plan.length > 0 && nextIncompleteDay !== null ? (
+                <div className="rounded-xl border border-emerald-300/20 bg-emerald-500/10 p-4">
+                  <div className="text-xs tracking-widest text-emerald-100/80">CONTINUE</div>
+                  <div className="mt-2 text-sm text-emerald-50/90">
+                    你還有未完成的任務：Day {nextIncompleteDay + 1}。
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      className="rounded-lg border border-emerald-300/20 bg-emerald-500/15 px-4 py-2 text-sm text-emerald-50 hover:bg-emerald-500/20"
+                      type="button"
+                      onClick={() => {
+                        setDayIndex(nextIncompleteDay);
+                        setView('task');
+                      }}
+                    >
+                      繼續下一個未完成
+                    </button>
+                    <button
+                      className="rounded-lg border border-emerald-300/20 bg-black/10 px-4 py-2 text-sm text-emerald-50/90 hover:bg-black/20"
+                      type="button"
+                      onClick={() => setView('result')}
+                    >
+                      看路徑總覽
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
               <div className="rounded-xl border border-white/10 bg-black/20 p-4">
                 <div className="text-xs tracking-widest text-white/50">START</div>
                 <div className="mt-2 text-sm text-white/75">
