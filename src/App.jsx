@@ -807,6 +807,37 @@ export default function App() {
 
     if (!plan?.length) {
       lines.push('尚未產生 7 日路徑（請先完成診斷）。');
+      lines.push(`診斷進度：已作答 ${answeredCount}/${allQuestions.length}（${answeredPct}%）`);
+      if (unansweredCount > 0) lines.push(`未作答：${unansweredCount} 題`);
+
+      const ranked = Object.entries(perSkill)
+        .map(([skillId, v]) => ({
+          skillId,
+          mastery: v.mastery,
+          correct: v.correct,
+          answered: v.answered,
+          total: v.total
+        }))
+        // Prefer showing skills that have at least 1 answered diagnostic question.
+        .sort((a, b) => {
+          const aHas = (a.answered || 0) > 0;
+          const bHas = (b.answered || 0) > 0;
+          if (aHas !== bHas) return aHas ? -1 : 1;
+          return a.mastery - b.mastery;
+        });
+
+      const topWeak = ranked.filter((x) => (x.answered || 0) > 0).slice(0, 3);
+      if (topWeak.length) {
+        lines.push('');
+        lines.push('弱點 Top 3（尚未完成診斷，僅供參考）：');
+        for (const w of topWeak) {
+          const s = SKILLS.find((x) => x.id === w.skillId);
+          const denom = w.answered ?? 0;
+          const suffix = denom > 0 ? `${w.correct}/${denom}` : `0/0`;
+          lines.push(`- ${s?.name || w.skillId}: ${w.mastery}%（${suffix}，共 ${w.total} 題）`);
+        }
+      }
+
       return lines.join('\n');
     }
 
@@ -1248,6 +1279,14 @@ export default function App() {
                         onClick={() => startDiagnostic({ reset: true })}
                       >
                         重新開始
+                      </button>
+                      <button
+                        className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75 hover:bg-white/10"
+                        type="button"
+                        onClick={exportShareSummary}
+                        title="即使診斷還沒做完，也可以先匯出目前弱點摘要（供老師/同學參考）"
+                      >
+                        匯出摘要
                       </button>
                     </>
                   ) : (
