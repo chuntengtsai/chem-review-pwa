@@ -1748,6 +1748,9 @@ export default function App() {
                 </span>
 
                 <div className="flex items-center gap-2">
+                  <span className="hidden lg:inline text-white/35" title="鍵盤：按 ? 或 H 也可開啟快捷鍵說明" aria-hidden="true">
+                    按 ? 看快捷鍵
+                  </span>
                   <button
                     className={cls(
                       'rounded-lg border px-3 py-1.5 text-xs hover:bg-white/10 disabled:opacity-50',
