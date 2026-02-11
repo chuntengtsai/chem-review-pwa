@@ -2631,11 +2631,26 @@ export default function App() {
 
                         {Array.isArray(q?.choices) && q.choices.length > 0 ? (
                           <div className="mt-2 grid gap-1 text-xs text-white/70">
-                            {q.choices.map((c, idx) => (
-                              <div key={`${q.id}_c_${idx}`} className="rounded-lg border border-white/10 bg-black/10 px-3 py-2">
-                                <span className="text-white/60">{String.fromCharCode(65 + idx)}.</span> {c}
-                              </div>
-                            ))}
+                            {q.choices.map((c, idx) => {
+                              const isCorrect = idx === q.answer;
+                              return (
+                                <div
+                                  key={`${q.id}_c_${idx}`}
+                                  className={cls(
+                                    'rounded-lg border px-3 py-2',
+                                    'bg-black/10',
+                                    isRevealed && isCorrect
+                                      ? 'border-emerald-300/25 bg-emerald-500/10 text-emerald-50'
+                                      : 'border-white/10 text-white/80'
+                                  )}
+                                >
+                                  <span className={cls('mr-1', isRevealed && isCorrect ? 'text-emerald-50/90' : 'text-white/60')}>
+                                    {String.fromCharCode(65 + idx)}.
+                                  </span>
+                                  {c}
+                                </div>
+                              );
+                            })}
                           </div>
                         ) : null}
 
