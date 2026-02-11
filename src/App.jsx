@@ -407,6 +407,7 @@ export default function App() {
   const [needRefresh, setNeedRefresh] = useState(false);
   const [offlineReady, setOfflineReady] = useState(false);
   const updateSWRef = useRef(null);
+  const offlineReadyTimerRef = useRef(0);
 
   // Tiny QoL: allow copying version/build info (useful for bug reports)
   const [buildInfoCopied, setBuildInfoCopied] = useState(false);
@@ -423,6 +424,7 @@ export default function App() {
   // Small UX: when the user goes offline then returns online, show a tiny confirmation toast.
   const [backOnline, setBackOnline] = useState(false);
   const prevOnlineRef = useRef(isOnline);
+  const backOnlineTimerRef = useRef(0);
 
   // Small UX: show a floating "scroll to top" button on long pages.
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -572,8 +574,19 @@ export default function App() {
 
     function onOfflineReady() {
       setOfflineReady(true);
+
       // auto-hide after a bit (keep it subtle)
-      window.setTimeout?.(() => setOfflineReady(false), 3500);
+      try {
+        if (offlineReadyTimerRef.current) window.clearTimeout(offlineReadyTimerRef.current);
+      } catch {
+        // ignore
+      }
+
+      try {
+        offlineReadyTimerRef.current = window.setTimeout?.(() => setOfflineReady(false), 3500) || 0;
+      } catch {
+        // ignore
+      }
     }
 
     window.addEventListener('pwa:need-refresh', onNeedRefresh);
@@ -588,6 +601,12 @@ export default function App() {
       mq?.removeEventListener?.('change', updateStandalone);
       window.removeEventListener('pwa:need-refresh', onNeedRefresh);
       window.removeEventListener('pwa:offline-ready', onOfflineReady);
+
+      try {
+        if (offlineReadyTimerRef.current) window.clearTimeout(offlineReadyTimerRef.current);
+      } catch {
+        // ignore
+      }
     };
   }, []);
 
@@ -598,10 +617,29 @@ export default function App() {
     // Only toast when transitioning from offline -> online.
     if (!prev && cur) {
       setBackOnline(true);
-      window.setTimeout?.(() => setBackOnline(false), 2000);
+
+      try {
+        if (backOnlineTimerRef.current) window.clearTimeout(backOnlineTimerRef.current);
+      } catch {
+        // ignore
+      }
+
+      try {
+        backOnlineTimerRef.current = window.setTimeout?.(() => setBackOnline(false), 2000) || 0;
+      } catch {
+        // ignore
+      }
     }
 
     prevOnlineRef.current = cur;
+
+    return () => {
+      try {
+        if (backOnlineTimerRef.current) window.clearTimeout(backOnlineTimerRef.current);
+      } catch {
+        // ignore
+      }
+    };
   }, [isOnline]);
 
   useEffect(() => {
