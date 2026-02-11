@@ -204,12 +204,29 @@ export default function App() {
     }
   });
 
+  // Network status (useful for PWA/offline usage)
+  const [isOnline, setIsOnline] = useState(() => {
+    try {
+      return typeof navigator !== 'undefined' ? Boolean(navigator.onLine) : true;
+    } catch {
+      return true;
+    }
+  });
+
   useEffect(() => {
     function updateStandalone() {
       try {
         setIsStandalone(Boolean(window?.navigator?.standalone) || window?.matchMedia?.('(display-mode: standalone)')?.matches);
       } catch {
         setIsStandalone(false);
+      }
+    }
+
+    function updateOnline() {
+      try {
+        setIsOnline(typeof navigator !== 'undefined' ? Boolean(navigator.onLine) : true);
+      } catch {
+        setIsOnline(true);
       }
     }
 
@@ -226,8 +243,11 @@ export default function App() {
     }
 
     updateStandalone();
+    updateOnline();
     window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
     window.addEventListener('appinstalled', onAppInstalled);
+    window.addEventListener('online', updateOnline);
+    window.addEventListener('offline', updateOnline);
 
     // Some browsers update display-mode via media query changes.
     const mq = window?.matchMedia?.('(display-mode: standalone)');
@@ -236,6 +256,8 @@ export default function App() {
     return () => {
       window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
       window.removeEventListener('appinstalled', onAppInstalled);
+      window.removeEventListener('online', updateOnline);
+      window.removeEventListener('offline', updateOnline);
       mq?.removeEventListener?.('change', updateStandalone);
     };
   }, []);
@@ -516,6 +538,7 @@ export default function App() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            {!isOnline ? <Badge tone="warn">離線</Badge> : null}
             <Badge>React</Badge>
             <Badge>Vite</Badge>
             <Badge>Tailwind</Badge>
