@@ -1084,6 +1084,19 @@ export default function App() {
                   </button>
 
                   <button
+                    className="rounded-lg border border-rose-300/20 bg-rose-500/10 px-3 py-1.5 text-xs text-rose-100 hover:bg-rose-500/15"
+                    type="button"
+                    onClick={() => {
+                      const ok = window.confirm('要重置診斷作答嗎？（會清除目前已作答的診斷答案）');
+                      if (!ok) return;
+                      startDiagnostic({ reset: true });
+                    }}
+                    title="清除目前診斷作答，從第 1 題重新開始"
+                  >
+                    重置診斷
+                  </button>
+
+                  <button
                     className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
                     type="button"
                     onClick={() => setView('home')}
