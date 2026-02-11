@@ -471,6 +471,11 @@ export default function App() {
       // avoid interfering with browser/OS shortcuts
       if (e.metaKey || e.ctrlKey || e.altKey) return;
 
+      // don't hijack keystrokes when user is typing in a form element
+      const t = e.target;
+      const tag = String(t?.tagName || '').toUpperCase();
+      if (t?.isContentEditable || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
       const q = currentQ;
       if (!q) return;
 
