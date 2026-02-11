@@ -33,6 +33,10 @@ function cls(...xs) {
   return xs.filter(Boolean).join(' ');
 }
 
+function safeDomId(x) {
+  return String(x || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
 function Badge({ children, tone = 'neutral' }) {
   const toneCls =
     tone === 'good'
@@ -857,6 +861,8 @@ export default function App() {
   const allPracticeRevealed = useMemo(() => practiceQs.length > 0 && practiceQs.every((q) => Boolean(revealed?.[q.id])), [practiceQs, revealed]);
   const practiceRevealedCount = useMemo(() => practiceQs.filter((q) => Boolean(revealed?.[q.id])).length, [practiceQs, revealed]);
 
+  const firstUnrevealedPractice = useMemo(() => practiceQs.find((q) => !revealed?.[q.id]) || null, [practiceQs, revealed]);
+
   return (
     <div className="min-h-screen">
       <input
@@ -1466,6 +1472,26 @@ export default function App() {
                       </button>
                     ) : null}
 
+
+                    {firstUnrevealedPractice ? (
+                      <button
+                        className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                        type="button"
+                        onClick={() => {
+                          try {
+                            document
+                              .getElementById(`pq_${safeDomId(firstUnrevealedPractice.id)}`)
+                              ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          } catch {
+                            // ignore
+                          }
+                        }}
+                        title="跳到第一題尚未顯示答案的練習題"
+                      >
+                        跳到未顯示
+                      </button>
+                    ) : null}
+
                     <button
                       className="rounded-lg border border-white/10 bg-emerald-500/10 px-3 py-1.5 text-xs text-emerald-50 hover:bg-emerald-500/15 disabled:opacity-50"
                       type="button"
@@ -1486,7 +1512,7 @@ export default function App() {
                   {practiceQs.map((q) => {
                     const isRevealed = Boolean(revealed?.[q.id]);
                     return (
-                      <div key={q.id} className="rounded-xl border border-white/10 bg-black/10 p-4">
+                      <div id={`pq_${safeDomId(q.id)}`} key={q.id} className="rounded-xl border border-white/10 bg-black/10 p-4">
                         <div className="flex items-start justify-between gap-3">
                           <div className="text-sm font-semibold text-white/90">{q.stem}</div>
                           <button
