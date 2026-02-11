@@ -2041,10 +2041,21 @@ export default function App() {
                           </button>
                         </div>
 
+                        {Array.isArray(q?.choices) && q.choices.length > 0 ? (
+                          <div className="mt-2 grid gap-1 text-xs text-white/70">
+                            {q.choices.map((c, idx) => (
+                              <div key={`${q.id}_c_${idx}`} className="rounded-lg border border-white/10 bg-black/10 px-3 py-2">
+                                <span className="text-white/60">{String.fromCharCode(65 + idx)}.</span> {c}
+                              </div>
+                            ))}
+                          </div>
+                        ) : null}
+
                         {isRevealed ? (
                           <div className="mt-2 grid gap-2 text-xs text-white/55">
                             <div>
-                              答案：{String.fromCharCode(65 + q.answer)} · {q.explanation}
+                              答案：{String.fromCharCode(65 + q.answer)}
+                              {Array.isArray(q?.choices) && q.choices?.[q.answer] ? `（${q.choices[q.answer]}）` : ''} · {q.explanation}
                             </div>
 
                             {Array.isArray(q?.wrongReasonTags) && q.wrongReasonTags.length > 0 ? (
