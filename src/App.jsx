@@ -211,6 +211,7 @@ export default function App() {
 
   const importFileRef = useRef(null);
   const didAutoJumpToNextIncompleteRef = useRef(false);
+  const skipNextPersistRef = useRef(false);
 
   // diagnostic UX
   const [autoNext, setAutoNext] = useState(() => {
@@ -375,6 +376,11 @@ export default function App() {
 
   // persist state
   useEffect(() => {
+    if (skipNextPersistRef.current) {
+      skipNextPersistRef.current = false;
+      return;
+    }
+
     const payload = {
       plan,
       dayIndex,
@@ -866,7 +872,13 @@ export default function App() {
     // keep minimal: clear persisted state + reset in-memory state
     const ok = window.confirm('確定要重置進度？這會清除你的診斷結果與 7 日路徑。');
     if (!ok) return;
+
+    // Prevent the reactive "persist" effect from immediately re-writing an empty state
+    // right after we remove localStorage (so reset truly clears).
+    skipNextPersistRef.current = true;
+
     storageRemove(STORAGE_KEY);
+    setSavedAt('');
     setView('home');
     setDiagIndex(0);
     setAnswers({});
