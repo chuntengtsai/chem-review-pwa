@@ -209,6 +209,8 @@ export default function App() {
   const [view, setView] = useState('home'); // home|diagnostic|result|task
   const [diagIndex, setDiagIndex] = useState(0);
 
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
   const importFileRef = useRef(null);
   const didAutoJumpToNextIncompleteRef = useRef(false);
   const skipNextPersistRef = useRef(false);
@@ -574,6 +576,10 @@ export default function App() {
     }
   }, [view]);
 
+  useEffect(() => {
+    if (view !== 'diagnostic') setShowShortcuts(false);
+  }, [view]);
+
   // When browsing different days in the task view, snap back to the concept section.
   useEffect(() => {
     if (view !== 'task') return;
@@ -602,6 +608,20 @@ export default function App() {
 
       const q = currentQ;
       if (!q) return;
+
+      if (showShortcuts) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          setShowShortcuts(false);
+        }
+        return;
+      }
+
+      if (e.key === '?' || e.key === 'h' || e.key === 'H') {
+        e.preventDefault();
+        setShowShortcuts(true);
+        return;
+      }
 
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -658,7 +678,7 @@ export default function App() {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [view, currentQ, answers, diagIndex, allQuestions.length, chooseDiagnosticAnswer, submitDiagnostic]);
+  }, [view, currentQ, answers, diagIndex, allQuestions.length, chooseDiagnosticAnswer, submitDiagnostic, showShortcuts]);
 
   function goTodayTask() {
     setView('task');
@@ -1096,6 +1116,46 @@ export default function App() {
 
           {view === 'diagnostic' ? (
             <div className="grid gap-4">
+              {showShortcuts ? (
+                <div
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="鍵盤快捷鍵"
+                  onClick={() => setShowShortcuts(false)}
+                >
+                  <div
+                    className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-950/95 p-5 text-white/85 shadow-2xl"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-xs tracking-widest text-white/50">HELP</div>
+                        <div className="mt-1 text-base font-semibold">診斷快捷鍵</div>
+                      </div>
+                      <button
+                        className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                        type="button"
+                        onClick={() => setShowShortcuts(false)}
+                      >
+                        關閉（Esc）
+                      </button>
+                    </div>
+
+                    <ul className="mt-4 grid gap-2 text-sm text-white/75">
+                      <li>• 1–4 或 A–D：選擇答案</li>
+                      <li>• ← / →：上一題 / 下一題（→ 需要已作答）</li>
+                      <li>• Enter：下一題 / 送出診斷</li>
+                      <li>• Esc：關閉此視窗 / 退出診斷</li>
+                      <li>• ? 或 H：打開此視窗</li>
+                    </ul>
+
+                    <div className="mt-4 text-xs text-white/55">
+                      小提醒：如果你在輸入框打字，快捷鍵不會生效（避免干擾）。
+                    </div>
+                  </div>
+                </div>
+              ) : null}
               <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-white/55">
                 <span>
                   題目 {diagIndex + 1} / {allQuestions.length} · 已作答 {answeredCount} / {allQuestions.length}（{answeredPct}%）
@@ -1128,6 +1188,15 @@ export default function App() {
                     title="選完答案自動跳到下一題"
                   >
                     自動下一題：{autoNext ? '開' : '關'}
+                  </button>
+
+                  <button
+                    className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                    type="button"
+                    onClick={() => setShowShortcuts(true)}
+                    title="查看鍵盤快捷鍵（也可按 ? 或 H）"
+                  >
+                    快捷鍵
                   </button>
 
                   <button
