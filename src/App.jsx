@@ -21,7 +21,9 @@ function formatLocalTime(iso) {
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      // Prefer 24-hour time to avoid 上午/下午 ambiguity in tiny badges/exports.
+      hourCycle: 'h23'
     });
     return fmt.format(d);
   } catch {
