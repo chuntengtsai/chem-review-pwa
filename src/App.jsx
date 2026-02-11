@@ -148,10 +148,25 @@ function storageRemove(key) {
   }
 }
 
-async function tryNativeShare({ title, text }) {
+async function tryNativeShare({ title, text, filename, mimeType }) {
   try {
     // Mobile-friendly share sheet (iOS/Android). Requires a user gesture.
     if (!navigator?.share) return false;
+
+    // Prefer sharing as a file when supported (avoids huge text payloads getting truncated by some targets).
+    if (filename && typeof File !== 'undefined') {
+      try {
+        const file = new File([text], filename, { type: mimeType || 'text/plain;charset=utf-8' });
+        const can = navigator?.canShare?.({ files: [file] });
+        if (can) {
+          await navigator.share({ title, files: [file] });
+          return true;
+        }
+      } catch {
+        // fall back to plain text share
+      }
+    }
+
     await navigator.share({ title, text });
     return true;
   } catch {
@@ -859,7 +874,12 @@ export default function App() {
     const text = JSON.stringify(payload, null, 2);
 
     // Prefer native share sheet on mobile; fall back to clipboard / download.
-    const shared = await tryNativeShare({ title: '化學覆習進度（JSON）', text });
+    const shared = await tryNativeShare({
+      title: '化學覆習進度（JSON）',
+      text,
+      filename: 'chem-review-progress.json',
+      mimeType: 'application/json'
+    });
     if (shared) return;
 
     const ok = await copyToClipboard(text);
@@ -882,7 +902,12 @@ export default function App() {
     const text = buildShareSummary();
 
     // Prefer native share sheet on mobile; fall back to clipboard / download.
-    const shared = await tryNativeShare({ title: '化學覆習進度摘要', text });
+    const shared = await tryNativeShare({
+      title: '化學覆習進度摘要',
+      text,
+      filename: 'chem-review-summary.txt',
+      mimeType: 'text/plain;charset=utf-8'
+    });
     if (shared) return;
 
     const ok = await copyToClipboard(text);
