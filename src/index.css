@@ -15,4 +15,7 @@ body {
   margin: 0;
   background: #0b0f14;
   color: rgba(255, 255, 255, 0.9);
+
+  /* iOS notch / home-indicator safe areas (env() resolves to 0 on unsupported platforms) */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
