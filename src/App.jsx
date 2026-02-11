@@ -1152,6 +1152,14 @@ export default function App() {
 
   const buildLabel = useMemo(() => formatBuildTime(BUILD_TIME), []);
 
+  // Show/copy build info even if we only have version (some deploys may omit __BUILD_TIME__).
+  const buildInfoText = useMemo(() => {
+    const parts = [];
+    if (buildLabel) parts.push(`最後部署：${buildLabel}`);
+    if (APP_VERSION) parts.push(`v${APP_VERSION}`);
+    return parts.join(' · ');
+  }, [buildLabel]);
+
   const practiceQs = useMemo(() => getPracticeQuestionsForSkill(currentSkill?.id || ''), [currentSkill?.id]);
 
   // If a skill has 0 practice questions (e.g., during MVP expansion), don't block users from marking practice as done.
@@ -2146,14 +2154,13 @@ export default function App() {
         </div>
       ) : null}
 
-      {buildLabel ? (
+      {buildInfoText ? (
         <button
           type="button"
           className="fixed bottom-3 right-3 z-40 rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[11px] text-white/65 backdrop-blur hover:bg-black/45"
-          title="點一下複製版本/部署時間（方便回報問題）"
+          title="點一下複製版本資訊（方便回報問題）"
           onClick={async () => {
-            const text = `最後部署：${buildLabel}${APP_VERSION ? ` · v${APP_VERSION}` : ''}`;
-            const ok = await copyToClipboard(text);
+            const ok = await copyToClipboard(buildInfoText);
             if (ok) {
               setBuildInfoCopied(true);
               window.setTimeout?.(() => setBuildInfoCopied(false), 2000);
@@ -2162,8 +2169,7 @@ export default function App() {
             }
           }}
         >
-          最後部署：{buildLabel}
-          {APP_VERSION ? ` · v${APP_VERSION}` : ''}
+          {buildInfoText}
         </button>
       ) : null}
     </div>
