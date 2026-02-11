@@ -492,6 +492,88 @@ export const SKILLS = [
         wrongReasonTags: ['取樣濃度概念錯']
       }
     ]
+  },
+
+  {
+    id: 'balancing',
+    name: '化學方程式配平（係數）',
+    blurb: '守恆：原子數（必要時含電荷）；先配複雜、後配 H/O',
+    diagnostic: [
+      {
+        id: 'bal_d1',
+        kind: 'mc',
+        stem: '配平：__ H2 + __ O2 → __ H2O',
+        choices: ['1,1,1', '2,1,2', '1,2,2', '2,2,2'],
+        answer: 1,
+        explanation: '2H2 + O2 → 2H2O，可同時守恆 H、O 原子數。',
+        wrongReasonTags: ['係數概念錯', '只看一種元素']
+      },
+      {
+        id: 'bal_d2',
+        kind: 'mc',
+        stem: '配平：__ Al + __ O2 → __ Al2O3',
+        choices: ['2,3,1', '4,3,2', '1,1,1', '2,1,1'],
+        answer: 1,
+        explanation: '4Al + 3O2 → 2Al2O3（先配 Al2O3 的 O=6，再回推 O2=3，Al=4）。',
+        wrongReasonTags: ['最小整數係數錯', '倍數回推錯']
+      }
+    ],
+    practice: [
+      {
+        id: 'bal_p1',
+        kind: 'mc',
+        stem: '配平：__ N2 + __ H2 → __ NH3',
+        choices: ['1,3,2', '1,2,3', '2,3,2', '1,1,1'],
+        answer: 0,
+        explanation: 'N2 有 2 個 N，需 2NH3；此時 H 為 6，需要 3H2。',
+        wrongReasonTags: ['先配錯元素', 'H係數錯']
+      },
+      {
+        id: 'bal_p2',
+        kind: 'mc',
+        stem: '配平：__ Fe + __ O2 → __ Fe2O3',
+        choices: ['2,1,1', '4,3,2', '2,3,1', '1,1,1'],
+        answer: 1,
+        explanation: '4Fe + 3O2 → 2Fe2O3（O=6 對上 3O2，Fe=4）。',
+        wrongReasonTags: ['O倍數錯', 'Fe倍數錯']
+      },
+      {
+        id: 'bal_p3',
+        kind: 'mc',
+        stem: '配平：__ C3H8 + __ O2 → __ CO2 + __ H2O',
+        choices: ['1,5,3,4', '1,4,3,4', '2,5,6,8', '1,3,3,4'],
+        answer: 0,
+        explanation: '先配 C：3CO2；配 H：4H2O；再配 O：右側 O=3×2+4×1=10 → 5O2。',
+        wrongReasonTags: ['先配C/H策略錯', '最後配O錯']
+      },
+      {
+        id: 'bal_p4',
+        kind: 'mc',
+        stem: '配平：__ Na + __ Cl2 → __ NaCl',
+        choices: ['1,1,1', '2,1,2', '1,2,2', '2,2,2'],
+        answer: 1,
+        explanation: 'Cl2 是雙原子分子，需 2NaCl 才能配平 Cl，故 Na 也為 2。',
+        wrongReasonTags: ['雙原子分子忽略', '只配一邊']
+      },
+      {
+        id: 'bal_p5',
+        kind: 'mc',
+        stem: '配平：__ KClO3 → __ KCl + __ O2',
+        choices: ['1,1,1', '2,2,3', '2,2,1', '3,3,2'],
+        answer: 1,
+        explanation: '2KClO3 → 2KCl + 3O2（先讓 O 變 6，對上 3O2）。',
+        wrongReasonTags: ['O係數錯', '最小整數係數錯']
+      },
+      {
+        id: 'bal_p6',
+        kind: 'mc',
+        stem: '下列哪個配平順序通常較好？',
+        choices: ['先配 O 再配 H', '先配最複雜的化合物，再配單質，最後配 H/O', '看到係數就先全乘 2', '先把所有係數設為 1'],
+        answer: 1,
+        explanation: '常見策略：先配複雜物種（含多元素/多原子），單質通常最後；含 H/O 的反應常把 O 最後。',
+        wrongReasonTags: ['策略概念錯']
+      }
+    ]
   }
 ];
 
