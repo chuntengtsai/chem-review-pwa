@@ -598,6 +598,14 @@ export default function App() {
     setView('diagnostic');
 
     if (reset) {
+      // Resetting diagnostic should also clear any previously generated plan/progress,
+      // otherwise we can end up with a "plan" that no longer matches answers.
+      setPlan([]);
+      setDayIndex(0);
+      setDayProgress({});
+      setRevealed({});
+      didAutoJumpToNextIncompleteRef.current = false;
+
       setAnswers({});
       setDiagIndex(0);
       return;
