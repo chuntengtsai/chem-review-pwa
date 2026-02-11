@@ -769,6 +769,25 @@ export default function App() {
         return;
       }
 
+      // Extra QoL shortcuts
+      // - C: clear current answer
+      // - J: jump to first unanswered
+      if (k === 'c') {
+        if (answers?.[q.id] !== undefined) {
+          e.preventDefault();
+          clearDiagnosticAnswer(q.id);
+        }
+        return;
+      }
+
+      if (k === 'j') {
+        if (firstUnansweredIndex >= 0) {
+          e.preventDefault();
+          setDiagIndex(firstUnansweredIndex);
+        }
+        return;
+      }
+
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
         setDiagIndex((i) => Math.max(0, i - 1));
@@ -795,7 +814,18 @@ export default function App() {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [view, currentQ, answers, diagIndex, allQuestions.length, chooseDiagnosticAnswer, submitDiagnostic, showShortcuts]);
+  }, [
+    view,
+    currentQ,
+    answers,
+    diagIndex,
+    allQuestions.length,
+    firstUnansweredIndex,
+    chooseDiagnosticAnswer,
+    clearDiagnosticAnswer,
+    submitDiagnostic,
+    showShortcuts
+  ]);
 
   function goTodayTask() {
     // If there is a known next incomplete day, prefer jumping there.
@@ -1474,6 +1504,8 @@ export default function App() {
                       <li>• 1–4 或 A–D：選擇答案</li>
                       <li>• ← / →：上一題 / 下一題（→ 需要已作答）</li>
                       <li>• Enter：下一題 / 送出診斷</li>
+                      <li>• C：清除本題作答</li>
+                      <li>• J：跳到第一個未作答</li>
                       <li>• Esc：關閉此視窗 / 退出診斷</li>
                       <li>• ? 或 H：打開此視窗</li>
                     </ul>
@@ -1641,7 +1673,7 @@ export default function App() {
               </div>
 
               <div className="rounded-xl border border-white/10 bg-black/10 p-4 text-xs text-white/55">
-                設計目標：診斷題要能定位「技能點弱項」。MVP 先用每技能點 2 題做示範。小技巧：可用 1–4 或 A–D 作答、←/→ 換題、Enter 下一題、Esc 退出。
+                設計目標：診斷題要能定位「技能點弱項」。MVP 先用每技能點 2 題做示範。小技巧：可用 1–4 或 A–D 作答、←/→ 換題、Enter 下一題、C 清除本題、J 跳到未答、Esc 退出。
               </div>
             </div>
           ) : null}
