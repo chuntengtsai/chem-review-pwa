@@ -131,16 +131,20 @@ function storageGet(key) {
 function storageSet(key, value) {
   try {
     window?.localStorage?.setItem(key, value);
+    return true;
   } catch {
     // ignore write failures (quota, disabled storage)
+    return false;
   }
 }
 
 function storageRemove(key) {
   try {
     window?.localStorage?.removeItem(key);
+    return true;
   } catch {
     // ignore
+    return false;
   }
 }
 
@@ -227,6 +231,10 @@ export default function App() {
     const s = persisted;
     return typeof s?.savedAt === 'string' ? s.savedAt : '';
   });
+
+  // localStorage might be disabled (Safari private mode / strict privacy settings).
+  // Track whether we can actually persist so we can warn the user.
+  const [storageWritable, setStorageWritable] = useState(true);
 
   // practice: revealed answers per question id
   const [revealed, setRevealed] = useState(() => {
@@ -386,9 +394,10 @@ export default function App() {
   const persistNow = useCallback(() => {
     const payload = lastPersistPayloadRef.current;
     if (!payload) return;
-    storageSet(STORAGE_KEY, JSON.stringify(payload));
-    setSavedAt(payload.savedAt);
-  }, []);
+    const ok = storageSet(STORAGE_KEY, JSON.stringify(payload));
+    setStorageWritable(ok);
+    if (ok) setSavedAt(payload.savedAt);
+  }, [setSavedAt, setStorageWritable]);
 
   useEffect(() => {
     if (skipNextPersistRef.current) {
@@ -965,7 +974,7 @@ export default function App() {
     setSavedAt(effectiveSavedAt);
 
     // Persist immediately (keep storage consistent with the clamped in-memory state)
-    storageSet(
+    const wrote = storageSet(
       STORAGE_KEY,
       JSON.stringify({
         plan: nextPlan,
@@ -977,6 +986,7 @@ export default function App() {
         savedAt: effectiveSavedAt
       })
     );
+    setStorageWritable(wrote);
 
     setView(nextPlan.length > 0 ? 'result' : 'home');
     return true;
@@ -1037,7 +1047,8 @@ export default function App() {
     // right after we remove localStorage (so reset truly clears).
     skipNextPersistRef.current = true;
 
-    storageRemove(STORAGE_KEY);
+    const removed = storageRemove(STORAGE_KEY);
+    setStorageWritable(removed);
     setSavedAt('');
     setView('home');
     setDiagIndex(0);
@@ -1081,6 +1092,11 @@ export default function App() {
           </div>
           <div className="flex items-center gap-2">
             {!isOnline ? <Badge tone="warn">離線</Badge> : null}
+            {!storageWritable ? (
+              <Badge tone="warn" title="你的瀏覽器可能停用了 localStorage（例如：隱私模式/嚴格追蹤防護）。進度可能無法自動保存。">
+                無法儲存
+              </Badge>
+            ) : null}
             {savedAt ? <Badge tone="neutral">已儲存 {formatLocalTime(savedAt)}</Badge> : null}
             <Badge>React</Badge>
             <Badge>Vite</Badge>
