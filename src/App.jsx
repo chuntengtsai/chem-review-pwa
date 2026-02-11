@@ -398,6 +398,7 @@ export default function App() {
     }
   }, []);
 
+
   useEffect(() => {
     return () => {
       try {
@@ -690,6 +691,24 @@ export default function App() {
     for (const q of allQuestions) if (answers?.[q.id] === undefined) n += 1;
     return n;
   }, [allQuestions, answers]);
+
+  // If localStorage is not writable (private mode / strict privacy),
+  // proactively remind users to export a backup once they start making progress.
+  const didWarnNoStorageRef = useRef(false);
+  useEffect(() => {
+    if (storageWritable) {
+      didWarnNoStorageRef.current = false;
+      return;
+    }
+
+    const hasProgress = answeredCount > 0 || plan.length > 0;
+    if (!hasProgress) return;
+
+    if (!didWarnNoStorageRef.current) {
+      didWarnNoStorageRef.current = true;
+      notify('偵測到無法自動儲存進度：建議現在就「匯出進度」備份（JSON）。', 'warn', 4200);
+    }
+  }, [storageWritable, answeredCount, plan.length, notify]);
 
   const stepState = useMemo(() => {
     const diagDone = plan.length > 0; // plan exists only after submit
