@@ -1395,10 +1395,12 @@ export default function App() {
       const q = currentQ;
       if (!q) return;
 
-      if (showShortcuts) {
+      // If any modal is open, only let Esc close it (avoid accidental navigation/answering).
+      if (showShortcuts || showIosInstallHelp) {
         if (e.key === 'Escape') {
           e.preventDefault();
-          setShowShortcuts(false);
+          if (showShortcuts) setShowShortcuts(false);
+          if (showIosInstallHelp) setShowIosInstallHelp(false);
         }
         return;
       }
@@ -1493,7 +1495,8 @@ export default function App() {
     chooseDiagnosticAnswer,
     clearDiagnosticAnswer,
     submitDiagnostic,
-    showShortcuts
+    showShortcuts,
+    showIosInstallHelp
   ]);
 
   function goTodayTask() {
