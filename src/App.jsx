@@ -837,20 +837,40 @@ export default function App() {
   // If the page is backgrounded/closed before the debounce fires (common on mobile),
   // flush the latest state so progress isn't lost.
   useEffect(() => {
+    function flush() {
+      persistNow();
+    }
+
     function onVisibilityChange() {
-      if (document.visibilityState === 'hidden') persistNow();
+      if (document.visibilityState === 'hidden') flush();
     }
 
     function onPageHide() {
-      persistNow();
+      flush();
+    }
+
+    function onBeforeUnload() {
+      // Best-effort only; do not block navigation.
+      flush();
+    }
+
+    function onFreeze() {
+      // Page Lifecycle API: fires when the page is being frozen (Chrome/Android).
+      flush();
     }
 
     document.addEventListener('visibilitychange', onVisibilityChange);
     window.addEventListener('pagehide', onPageHide);
+    window.addEventListener('beforeunload', onBeforeUnload);
+    // @ts-ignore - `freeze` is not in all lib.dom typings.
+    document.addEventListener('freeze', onFreeze);
 
     return () => {
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('pagehide', onPageHide);
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      // @ts-ignore - `freeze` is not in all lib.dom typings.
+      document.removeEventListener('freeze', onFreeze);
     };
   }, [persistNow]);
 
