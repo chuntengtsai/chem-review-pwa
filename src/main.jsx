@@ -24,7 +24,16 @@ const updateSW = registerSW({
   }
 });
 
-createRoot(document.getElementById('root')).render(
+const rootEl = document.getElementById('root') || (() => {
+  // Defensive: some embed contexts may not include a #root element.
+  // Create one to avoid a blank page with a cryptic error.
+  const el = document.createElement('div');
+  el.id = 'root';
+  document.body.appendChild(el);
+  return el;
+})();
+
+createRoot(rootEl).render(
   <StrictMode>
     <App />
   </StrictMode>
