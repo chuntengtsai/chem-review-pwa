@@ -716,3 +716,46 @@ export function getPracticeQuestionsForSkill(skillId) {
   const s = getSkillById(skillId);
   return (s?.practice || []).map((q) => ({ ...q, skillId }));
 }
+
+// Dev-time content validation (guards against accidental duplicate ids which would collide in localStorage state)
+export function validateSkillsContent(skills = SKILLS) {
+  /** @type {string[]} */
+  const errors = [];
+
+  try {
+    const seenSkillIds = new Set();
+    for (const s of skills || []) {
+      const sid = String(s?.id || '');
+      if (!sid) {
+        errors.push('Skill is missing an id.');
+        continue;
+      }
+      if (seenSkillIds.has(sid)) errors.push(`Duplicate skill id: ${sid}`);
+      seenSkillIds.add(sid);
+    }
+
+    const seenQids = new Set();
+    for (const s of skills || []) {
+      const sid = String(s?.id || '');
+      const sections = [
+        { label: 'diagnostic', qs: s?.diagnostic || [] },
+        { label: 'practice', qs: s?.practice || [] }
+      ];
+      for (const sec of sections) {
+        for (const q of sec.qs || []) {
+          const qid = String(q?.id || '');
+          if (!qid) {
+            errors.push(`Skill ${sid} (${sec.label}) has a question missing an id.`);
+            continue;
+          }
+          if (seenQids.has(qid)) errors.push(`Duplicate question id: ${qid}`);
+          seenQids.add(qid);
+        }
+      }
+    }
+  } catch (e) {
+    errors.push(`validateSkillsContent crashed: ${String(e?.message || e)}`);
+  }
+
+  return { ok: errors.length === 0, errors };
+}

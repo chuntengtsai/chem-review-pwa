@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { SKILLS, getAllDiagnosticQuestions, getPracticeQuestionsForSkill } from './content/skills.js';
+import { SKILLS, getAllDiagnosticQuestions, getPracticeQuestionsForSkill, validateSkillsContent } from './content/skills.js';
 
 const BUILD_TIME = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '';
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '';
@@ -875,6 +875,15 @@ export default function App() {
   }, [persistNow]);
 
   const allQuestions = useMemo(() => getAllDiagnosticQuestions(), []);
+
+  // Content sanity checks (DEV only): helps catch accidental duplicate ids that would corrupt progress storage.
+  useEffect(() => {
+    if (!import.meta?.env?.DEV) return;
+    const r = validateSkillsContent(SKILLS);
+    if (!r.ok) {
+      console.warn('[chem-review-pwa] skills content validation failed:', r.errors);
+    }
+  }, []);
 
   const perSkill = useMemo(() => computeMastery(SKILLS, answers), [answers]);
   const weakTop3 = useMemo(() => {
