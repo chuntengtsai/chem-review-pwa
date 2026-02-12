@@ -1537,10 +1537,14 @@ export default function App() {
     }
 
     // Minimal validation (keep it permissive)
-    const nextPlan = sanitizeImportedPlan(parsed.plan);
+    // Allow imports that only contain answers (plan missing) so users can move between builds
+    // and regenerate the 7-day path later.
+    let nextPlan = sanitizeImportedPlan(parsed.plan);
+    if (!nextPlan) nextPlan = [];
+
     const nextDayIndex = typeof parsed.dayIndex === 'number' ? parsed.dayIndex : 0;
     const nextAnswers = sanitizeImportedAnswers(parsed.answers);
-    const nextDayProgress = sanitizeImportedDayProgress(parsed.dayProgress, nextPlan?.length || 0);
+    const nextDayProgress = sanitizeImportedDayProgress(parsed.dayProgress, nextPlan.length);
     const nextRevealed = sanitizeImportedRevealed(parsed.revealed);
     const nextAutoNext = typeof parsed.autoNext === 'boolean' ? parsed.autoNext : true;
     const nextShufflePractice = typeof parsed.shufflePractice === 'boolean' ? parsed.shufflePractice : false;
@@ -1550,11 +1554,6 @@ export default function App() {
 
     // Optional metadata: when the user last exported progress (for backup nudges).
     const importedLastExportedAt = typeof parsed.lastExportedAt === 'string' ? parsed.lastExportedAt : '';
-
-    if (!nextPlan) {
-      window.alert('格式不正確：plan 必須是陣列');
-      return false;
-    }
 
     // If the imported file references skills/questions that no longer exist in this build,
     // warn the user that some progress will be skipped.
