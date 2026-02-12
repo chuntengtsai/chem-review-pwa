@@ -1850,6 +1850,7 @@ export default function App() {
               </Badge>
             ) : null}
             {savedAt ? <Badge tone="neutral">已儲存 {formatLocalTime(savedAt)}</Badge> : null}
+            {lastExportedAt ? <Badge tone="good">已備份 {formatLocalTime(lastExportedAt)}</Badge> : null}
             <Badge>React</Badge>
             <Badge>Vite</Badge>
             <Badge>Tailwind</Badge>
