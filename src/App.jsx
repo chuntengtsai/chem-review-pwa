@@ -2730,6 +2730,18 @@ export default function App() {
         </div>
       ) : null}
 
+      {!isOnline ? (
+        <div
+          className="fixed bottom-12 left-3 z-50 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-white/85 backdrop-blur"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          title="目前為離線狀態：題庫與進度操作仍可使用，但分享/更新可能受限。"
+        >
+          離線中
+        </div>
+      ) : null}
+
       {!storageWritable ? (
         <div
           className="fixed bottom-28 left-3 z-50 rounded-full border border-amber-300/20 bg-amber-500/10 px-3 py-1 text-[11px] text-amber-50/90 backdrop-blur"
