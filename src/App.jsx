@@ -1669,14 +1669,58 @@ export default function App() {
     return true;
   }
 
+  function summarizeImportedProgressForConfirm(parsed) {
+    try {
+      if (!parsed || typeof parsed !== 'object') return '';
+
+      const exportedAt = typeof parsed.exportedAt === 'string' ? parsed.exportedAt : '';
+      const savedAt = typeof parsed.savedAt === 'string' ? parsed.savedAt : '';
+
+      const answersObj = parsed.answers && typeof parsed.answers === 'object' ? parsed.answers : null;
+      const answersCount = answersObj ? Object.keys(answersObj).length : 0;
+
+      const planArr = Array.isArray(parsed.plan) ? parsed.plan : [];
+      const planLen = planArr.length;
+
+      const dp = parsed.dayProgress && typeof parsed.dayProgress === 'object' ? parsed.dayProgress : null;
+      let completedDays = 0;
+      if (dp && planLen) {
+        for (let i = 0; i < planLen; i++) {
+          const p = dp[i] || dp[String(i)];
+          if (p && typeof p === 'object' && p.conceptDone && p.practiceDone) completedDays += 1;
+        }
+      }
+
+      const lines = [];
+      if (exportedAt) lines.push(`匯出時間（台北）：${formatLocalTime(exportedAt)}`);
+      if (savedAt) lines.push(`最後儲存（台北）：${formatLocalTime(savedAt)}`);
+      if (Number.isFinite(planLen) && planLen > 0) lines.push(`7 日路徑：${planLen} 天（已完成 ${completedDays} 天）`);
+      if (Number.isFinite(answersCount) && answersCount > 0) lines.push(`診斷作答：${answersCount} 題`);
+
+      return lines.length ? `\n\n（匯入內容摘要）\n${lines.join('\n')}` : '';
+    } catch {
+      return '';
+    }
+  }
+
+  function confirmImportOverwrite({ sourceLabel, parsed }) {
+    const extra = summarizeImportedProgressForConfirm(parsed);
+    return window.confirm(`要用${sourceLabel}的進度覆蓋目前進度嗎？（此操作無法復原）${extra}`);
+  }
+
   function importProgressViaPrompt() {
     const raw = window.prompt('貼上先前匯出的進度 JSON（會覆蓋目前進度）');
     if (!raw) return;
 
-    const confirmOverwrite = window.confirm('要用匯入的進度覆蓋目前進度嗎？（此操作無法復原）');
+    const parsed = safeParsePossiblyWrappedJson(raw, null);
+    if (!parsed) {
+      notify('匯入失敗：請確認內容是有效的進度 JSON。', 'warn', 4200);
+      return;
+    }
+
+    const confirmOverwrite = confirmImportOverwrite({ sourceLabel: '「貼上」', parsed });
     if (!confirmOverwrite) return;
 
-    const parsed = safeParsePossiblyWrappedJson(raw, null);
     const ok = applyImportedProgress(parsed);
     if (ok) notify('已匯入進度。', 'good', 3200);
     else notify('匯入失敗：請確認內容是有效的進度 JSON。', 'warn', 4200);
@@ -1691,10 +1735,15 @@ export default function App() {
         return;
       }
 
-      const confirmOverwrite = window.confirm('要用剪貼簿的進度覆蓋目前進度嗎？（此操作無法復原）');
+      const parsed = safeParsePossiblyWrappedJson(text, null);
+      if (!parsed) {
+        notify('匯入失敗：剪貼簿內容看起來不是有效的進度 JSON。', 'warn', 4200);
+        return;
+      }
+
+      const confirmOverwrite = confirmImportOverwrite({ sourceLabel: '「剪貼簿」', parsed });
       if (!confirmOverwrite) return;
 
-      const parsed = safeParsePossiblyWrappedJson(text, null);
       const ok = applyImportedProgress(parsed);
       if (ok) notify('已從剪貼簿匯入進度。', 'good', 3200);
       else notify('匯入失敗：剪貼簿內容看起來不是有效的進度 JSON。', 'warn', 4200);
@@ -1717,13 +1766,16 @@ export default function App() {
       const file = e?.target?.files?.[0];
       if (!file) return;
 
-      const confirmOverwrite = window.confirm(
-        `要用「${file.name}」的進度覆蓋目前進度嗎？（此操作無法復原）`
-      );
-      if (!confirmOverwrite) return;
-
       const text = await file.text();
       const parsed = safeParsePossiblyWrappedJson(text, null);
+      if (!parsed) {
+        notify('匯入失敗：檔案內容看起來不是有效的進度 JSON。', 'warn', 4200);
+        return;
+      }
+
+      const confirmOverwrite = confirmImportOverwrite({ sourceLabel: `「檔案：${file.name}」`, parsed });
+      if (!confirmOverwrite) return;
+
       const ok = applyImportedProgress(parsed);
       if (ok) notify('已從檔案匯入進度。', 'good', 3200);
       else notify('匯入失敗：檔案內容看起來不是有效的進度 JSON。', 'warn', 4200);
@@ -1823,13 +1875,16 @@ export default function App() {
         return;
       }
 
-      const confirmOverwrite = window.confirm(
-        `要用「${file.name}」的進度覆蓋目前進度嗎？（此操作無法復原）`
-      );
-      if (!confirmOverwrite) return;
-
       const text = await file.text();
       const parsed = safeParsePossiblyWrappedJson(text, null);
+      if (!parsed) {
+        notify('匯入失敗：檔案內容看起來不是有效的進度 JSON。', 'warn', 4200);
+        return;
+      }
+
+      const confirmOverwrite = confirmImportOverwrite({ sourceLabel: `「拖放檔案：${file.name}」`, parsed });
+      if (!confirmOverwrite) return;
+
       const ok = applyImportedProgress(parsed);
       if (ok) notify('已從拖放檔案匯入進度。', 'good', 3200);
       else notify('匯入失敗：檔案內容看起來不是有效的進度 JSON。', 'warn', 4200);
