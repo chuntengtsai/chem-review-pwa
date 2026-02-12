@@ -2161,6 +2161,21 @@ export default function App() {
     setDragImportActive(false);
   }
 
+  // QoL: allow cancelling the drag-and-drop import overlay via Esc.
+  useEffect(() => {
+    if (!dragImportActive) return;
+
+    function onKeyDown(e) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setDragImportActive(false);
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [dragImportActive]);
+
   async function onDropImport(e) {
     e.preventDefault();
     setDragImportActive(false);
