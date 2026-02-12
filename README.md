@@ -64,6 +64,15 @@ The app shows these in the bottom-right “最後部署 / vX.Y.Z” badge.
   - `P`: export progress JSON
   - `S`: export share summary (text)
   - `I`: import progress from clipboard (falls back to paste prompt if permissions disallow)
+  - `T`: scroll to top
+
+- **Task view shortcuts (desktop, in “daily tasks”):**
+  - `←/→`: previous/next day
+  - `N`: jump to next incomplete day
+  - `1`: toggle Concept done
+  - `2`: toggle Practice done (requires all answers revealed)
+  - `R`: reveal next unrevealed answer (and jump)
+  - `Shift+R`: toggle reveal/hide all answers
 
 - **Progress import options:**
   - Import from clipboard (when permissions allow)
