@@ -60,7 +60,8 @@ function formatFilenameTimestamp(d = new Date()) {
     return `${y}${m}${day}_${hh}${mm}${ss}`;
   } catch {
     // Fall back to ISO-ish (no colons) to keep filenames safe.
-    return new Date().toISOString().replace(/[:.]/g, '-');
+    // Use the provided date to keep callers deterministic (tests, replays).
+    return d.toISOString().replace(/[:.]/g, '-');
   }
 }
 
