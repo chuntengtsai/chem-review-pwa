@@ -1089,9 +1089,8 @@ export default function App() {
     }
   }, [view]);
 
-  useEffect(() => {
-    if (view !== 'diagnostic') setShowShortcuts(false);
-  }, [view]);
+  // Shortcut help modal can be opened in any view.
+  // (Previously it was diagnostic-only; keep it global so users can discover P/S/I shortcuts too.)
 
   // When browsing different days in the task view, snap back to the concept section.
   useEffect(() => {
@@ -1125,7 +1124,21 @@ export default function App() {
       const tag = String(t?.tagName || '').toUpperCase();
       if (t?.isContentEditable || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
+      // If the help modal is open, let Esc close it.
+      if (showShortcuts && e.key === 'Escape') {
+        e.preventDefault();
+        setShowShortcuts(false);
+        return;
+      }
+
       const k = String(e.key || '').toLowerCase();
+
+      // Help (works outside diagnostic too)
+      if (k === '?' || k === 'h') {
+        e.preventDefault();
+        setShowShortcuts(true);
+        return;
+      }
 
       if (k === 'p') {
         e.preventDefault();
@@ -1148,7 +1161,7 @@ export default function App() {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [view]);
+  }, [view, showShortcuts]);
 
   // Keyboard shortcuts (desktop-friendly):
   // - 1-4 or A-D: choose option
@@ -1899,6 +1912,75 @@ export default function App() {
         </div>
       ) : null}
 
+      {showShortcuts ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="鍵盤快捷鍵"
+          onClick={() => setShowShortcuts(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-950/95 p-5 text-white/85 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-xs tracking-widest text-white/50">HELP</div>
+                <div className="mt-1 text-base font-semibold">鍵盤快捷鍵</div>
+                <div className="mt-1 text-xs text-white/55">
+                  {view === 'diagnostic' ? '（診斷模式）' : '（一般模式）'}
+                </div>
+              </div>
+              <button
+                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                type="button"
+                onClick={() => setShowShortcuts(false)}
+              >
+                關閉（Esc）
+              </button>
+            </div>
+
+            {view === 'diagnostic' ? (
+              <>
+                <div className="mt-4 text-xs font-semibold text-white/65">診斷</div>
+                <ul className="mt-2 grid gap-2 text-sm text-white/75">
+                  <li>• 1–4 或 A–D：選擇答案</li>
+                  <li>• ← / →：上一題 / 下一題（→ 需要已作答）</li>
+                  <li>• Enter：下一題 / 送出診斷</li>
+                  <li>• C：清除本題作答</li>
+                  <li>• J：跳到第一個未作答</li>
+                  <li>• Esc：關閉此視窗 / 退出診斷</li>
+                </ul>
+
+                <div className="mt-4 text-xs font-semibold text-white/65">全域（非診斷頁可用）</div>
+                <ul className="mt-2 grid gap-2 text-sm text-white/75">
+                  <li>• P：匯出進度（JSON）</li>
+                  <li>• S：匯出分享摘要（文字）</li>
+                  <li>• I：從剪貼簿匯入進度（JSON）</li>
+                  <li>• ? 或 H：打開此視窗</li>
+                </ul>
+              </>
+            ) : (
+              <>
+                <div className="mt-4 text-xs font-semibold text-white/65">全域</div>
+                <ul className="mt-2 grid gap-2 text-sm text-white/75">
+                  <li>• P：匯出進度（JSON）</li>
+                  <li>• S：匯出分享摘要（文字）</li>
+                  <li>• I：從剪貼簿匯入進度（JSON）</li>
+                  <li>• Esc：關閉此視窗</li>
+                  <li>• ? 或 H：打開此視窗</li>
+                </ul>
+
+                <div className="mt-4 text-xs text-white/55">診斷頁還有更多快捷鍵（1–4、A–D、←/→、Enter...）。</div>
+              </>
+            )}
+
+            <div className="mt-4 text-xs text-white/55">小提醒：如果你在輸入框打字，快捷鍵不會生效（避免干擾）。</div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="mx-auto max-w-3xl px-5 py-10">
         <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
@@ -2126,48 +2208,7 @@ export default function App() {
 
           {view === 'diagnostic' ? (
             <div className="grid gap-4">
-              {showShortcuts ? (
-                <div
-                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-                  role="dialog"
-                  aria-modal="true"
-                  aria-label="鍵盤快捷鍵"
-                  onClick={() => setShowShortcuts(false)}
-                >
-                  <div
-                    className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-950/95 p-5 text-white/85 shadow-2xl"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-xs tracking-widest text-white/50">HELP</div>
-                        <div className="mt-1 text-base font-semibold">診斷快捷鍵</div>
-                      </div>
-                      <button
-                        className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
-                        type="button"
-                        onClick={() => setShowShortcuts(false)}
-                      >
-                        關閉（Esc）
-                      </button>
-                    </div>
-
-                    <ul className="mt-4 grid gap-2 text-sm text-white/75">
-                      <li>• 1–4 或 A–D：選擇答案</li>
-                      <li>• ← / →：上一題 / 下一題（→ 需要已作答）</li>
-                      <li>• Enter：下一題 / 送出診斷</li>
-                      <li>• C：清除本題作答</li>
-                      <li>• J：跳到第一個未作答</li>
-                      <li>• Esc：關閉此視窗 / 退出診斷</li>
-                      <li>• ? 或 H：打開此視窗</li>
-                    </ul>
-
-                    <div className="mt-4 text-xs text-white/55">
-                      小提醒：如果你在輸入框打字，快捷鍵不會生效（避免干擾）。
-                    </div>
-                  </div>
-                </div>
-              ) : null}
+              {/* help modal is rendered globally (so it also works outside diagnostic) */}
               <div className="grid gap-2">
                 <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-white/55">
                   <span>
