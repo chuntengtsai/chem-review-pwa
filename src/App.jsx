@@ -2629,18 +2629,57 @@ export default function App() {
                       <div id={`pq_${safeDomId(q.id)}`} key={q.id} className="rounded-xl border border-white/10 bg-black/10 p-4">
                         <div className="flex items-start justify-between gap-3">
                           <div className="text-sm font-semibold text-white/90">{q.stem}</div>
-                          <button
-                            className={cls(
-                              'shrink-0 rounded-lg border px-3 py-1.5 text-xs',
-                              isRevealed
-                                ? 'border-emerald-300/20 bg-emerald-500/10 text-emerald-50 hover:bg-emerald-500/15'
-                                : 'border-white/10 bg-white/5 text-white/75 hover:bg-white/10'
-                            )}
-                            type="button"
-                            onClick={() => setRevealed((p) => ({ ...p, [q.id]: !p?.[q.id] }))}
-                          >
-                            {isRevealed ? '隱藏答案' : '顯示答案'}
-                          </button>
+
+                          <div className="flex shrink-0 items-center gap-2">
+                            <button
+                              className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                              type="button"
+                              title="複製本題（方便貼給老師/同學或做筆記）"
+                              onClick={async () => {
+                                const lines = [];
+                                lines.push('化學覆習練習題');
+                                lines.push(`題目：${q.stem}`);
+
+                                if (Array.isArray(q?.choices) && q.choices.length > 0) {
+                                  lines.push('選項：');
+                                  for (let i = 0; i < q.choices.length; i++) {
+                                    lines.push(`${String.fromCharCode(65 + i)}. ${q.choices[i]}`);
+                                  }
+                                }
+
+                                if (isRevealed) {
+                                  const ansLabel = String.fromCharCode(65 + q.answer);
+                                  const ansText = Array.isArray(q?.choices) && q.choices?.[q.answer] ? `（${q.choices[q.answer]}）` : '';
+                                  lines.push(`答案：${ansLabel}${ansText}`);
+                                  if (q.explanation) lines.push(`解析：${q.explanation}`);
+                                  if (Array.isArray(q?.wrongReasonTags) && q.wrongReasonTags.length > 0) {
+                                    lines.push(`常見錯因：${q.wrongReasonTags.join('、')}`);
+                                  }
+                                } else {
+                                  lines.push('（尚未顯示答案）');
+                                }
+
+                                const ok = await copyToClipboard(lines.join('\n'));
+                                if (ok) notify('已複製本題內容到剪貼簿。', 'good');
+                                else window.alert('你的瀏覽器不允許自動複製，請改用手動選取文字。');
+                              }}
+                            >
+                              複製本題
+                            </button>
+
+                            <button
+                              className={cls(
+                                'rounded-lg border px-3 py-1.5 text-xs',
+                                isRevealed
+                                  ? 'border-emerald-300/20 bg-emerald-500/10 text-emerald-50 hover:bg-emerald-500/15'
+                                  : 'border-white/10 bg-white/5 text-white/75 hover:bg-white/10'
+                              )}
+                              type="button"
+                              onClick={() => setRevealed((p) => ({ ...p, [q.id]: !p?.[q.id] }))}
+                            >
+                              {isRevealed ? '隱藏答案' : '顯示答案'}
+                            </button>
+                          </div>
                         </div>
 
                         {Array.isArray(q?.choices) && q.choices.length > 0 ? (
