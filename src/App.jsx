@@ -1248,11 +1248,13 @@ export default function App() {
       const tag = String(t?.tagName || '').toUpperCase();
       if (t?.isContentEditable || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
-      // If the help modal is open, let Esc close it.
-      if ((showShortcuts || showIosInstallHelp) && e.key === 'Escape') {
-        e.preventDefault();
-        if (showShortcuts) setShowShortcuts(false);
-        if (showIosInstallHelp) setShowIosInstallHelp(false);
+      // If any modal is open, only let Esc close it (avoid accidental export/import/navigation).
+      if (showShortcuts || showIosInstallHelp) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          if (showShortcuts) setShowShortcuts(false);
+          if (showIosInstallHelp) setShowIosInstallHelp(false);
+        }
         return;
       }
 
