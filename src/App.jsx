@@ -211,7 +211,12 @@ function safeParse(json, fallback) {
 // Some apps wrap shared JSON in extra text or code fences.
 // Try to recover by stripping fences and extracting the first JSON object/array block.
 function safeParsePossiblyWrappedJson(raw, fallback) {
-  const s = String(raw ?? '').trim();
+  // Some environments (notably certain text editors / iOS share flows) can prepend a UTF-8 BOM
+  // or zero-width spaces. Strip them so JSON.parse() doesn't fail unexpectedly.
+  const s = String(raw ?? '')
+    .replace(/^\uFEFF/, '')
+    .replace(/^\u200B+/, '')
+    .trim();
   if (!s) return fallback;
 
   const direct = safeParse(s, null);
