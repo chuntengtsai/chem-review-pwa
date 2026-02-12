@@ -2971,7 +2971,8 @@ export default function App() {
       ) : null}
 
       {toast?.msg ? (
-        <div
+        <button
+          type="button"
           className={cls(
             'fixed bottom-20 left-3 z-50 rounded-full border px-3 py-1 text-[11px] backdrop-blur',
             toast.tone === 'good'
@@ -2985,9 +2986,19 @@ export default function App() {
           role="status"
           aria-live="polite"
           aria-atomic="true"
+          aria-label="通知（點一下關閉）"
+          title="點一下關閉"
+          onClick={() => {
+            try {
+              if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+            } catch {
+              // ignore
+            }
+            setToast(null);
+          }}
         >
           {toast.msg}
-        </div>
+        </button>
       ) : null}
 
       {needRefresh ? (
