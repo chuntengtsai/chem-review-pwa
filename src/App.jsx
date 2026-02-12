@@ -411,6 +411,7 @@ export default function App() {
 
   // Tiny QoL: allow copying version/build info (useful for bug reports)
   const [buildInfoCopied, setBuildInfoCopied] = useState(false);
+  const buildInfoCopiedTimerRef = useRef(0);
 
   // Network status (useful for PWA/offline usage)
   const [isOnline, setIsOnline] = useState(() => {
@@ -453,6 +454,12 @@ export default function App() {
     return () => {
       try {
         if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+      } catch {
+        // ignore
+      }
+
+      try {
+        if (buildInfoCopiedTimerRef.current) window.clearTimeout(buildInfoCopiedTimerRef.current);
       } catch {
         // ignore
       }
@@ -2849,7 +2856,16 @@ export default function App() {
             const ok = await copyToClipboard(buildInfoText);
             if (ok) {
               setBuildInfoCopied(true);
-              window.setTimeout?.(() => setBuildInfoCopied(false), 2000);
+              try {
+                if (buildInfoCopiedTimerRef.current) window.clearTimeout(buildInfoCopiedTimerRef.current);
+              } catch {
+                // ignore
+              }
+              try {
+                buildInfoCopiedTimerRef.current = window.setTimeout?.(() => setBuildInfoCopied(false), 2000) || 0;
+              } catch {
+                // ignore
+              }
             } else {
               window.alert('你的瀏覽器不允許自動複製，請手動複製版本資訊。');
             }
