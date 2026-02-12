@@ -305,7 +305,16 @@ async function copyToClipboard(text) {
       ta.style.position = 'fixed';
       ta.style.top = '-9999px';
       document.body.appendChild(ta);
+
+      // iOS Safari is picky: focus + explicit selection range is more reliable than select() alone.
+      ta.focus?.();
       ta.select();
+      try {
+        ta.setSelectionRange?.(0, ta.value.length);
+      } catch {
+        // ignore
+      }
+
       const ok = document.execCommand('copy');
       document.body.removeChild(ta);
       return Boolean(ok);
