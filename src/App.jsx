@@ -1647,6 +1647,9 @@ export default function App() {
     setRevealed({});
     setAutoNext(true);
     setShufflePractice(false);
+
+    // Non-blocking confirmation (avoids relying on alert dialogs, especially on mobile/PWA).
+    notify('已重置進度。', 'info');
   }
 
   const buildLabel = useMemo(() => formatBuildTime(BUILD_TIME), []);
