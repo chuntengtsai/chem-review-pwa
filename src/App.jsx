@@ -1597,7 +1597,9 @@ export default function App() {
       return;
     }
 
-    markExported();
+    // Last resort: manual copy prompt.
+    // Do NOT mark as exported here because we cannot know whether the user actually copied/saved it.
+    notify('你的瀏覽器不允許自動複製/下載：已改用手動複製視窗（不會更新「上次備份」時間）。', 'warn', 3600);
     window.prompt('你的瀏覽器不允許自動複製/下載。請手動複製以下文字：', text);
   }
 
