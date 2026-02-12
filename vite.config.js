@@ -55,6 +55,9 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,svg,png,ico,txt}'],
+          // Keep SW caches tidy across version upgrades.
+          // (Without this, old precache entries can linger in some browser flows.)
+          cleanupOutdatedCaches: true,
           // SPA offline support: when the user opens a deep link while offline,
           // serve the cached app shell (index.html) instead of a Workbox 404.
           navigateFallback: '/index.html',
