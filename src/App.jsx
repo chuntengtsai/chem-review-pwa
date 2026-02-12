@@ -207,6 +207,35 @@ function safeParse(json, fallback) {
   }
 }
 
+// Some apps wrap shared JSON in extra text or code fences.
+// Try to recover by stripping fences and extracting the first {...} block.
+function safeParsePossiblyWrappedJson(raw, fallback) {
+  const s = String(raw ?? '').trim();
+  if (!s) return fallback;
+
+  const direct = safeParse(s, null);
+  if (direct !== null) return direct;
+
+  // Strip common Markdown fences: ```json ... ```
+  const unfenced = s
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```\s*$/i, '')
+    .trim();
+
+  const unfencedDirect = safeParse(unfenced, null);
+  if (unfencedDirect !== null) return unfencedDirect;
+
+  const start = unfenced.indexOf('{');
+  const end = unfenced.lastIndexOf('}');
+  if (start >= 0 && end > start) {
+    const slice = unfenced.slice(start, end + 1);
+    const sliced = safeParse(slice, null);
+    if (sliced !== null) return sliced;
+  }
+
+  return fallback;
+}
+
 function storageGet(key) {
   try {
     // localStorage can throw in some privacy modes / if disabled
@@ -1592,7 +1621,7 @@ export default function App() {
     const confirmOverwrite = window.confirm('要用匯入的進度覆蓋目前進度嗎？（此操作無法復原）');
     if (!confirmOverwrite) return;
 
-    const parsed = safeParse(raw, null);
+    const parsed = safeParsePossiblyWrappedJson(raw, null);
     const ok = applyImportedProgress(parsed);
     if (ok) notify('已匯入進度。', 'good', 3200);
     else notify('匯入失敗：請確認內容是有效的進度 JSON。', 'warn', 4200);
@@ -1610,7 +1639,7 @@ export default function App() {
       const confirmOverwrite = window.confirm('要用剪貼簿的進度覆蓋目前進度嗎？（此操作無法復原）');
       if (!confirmOverwrite) return;
 
-      const parsed = safeParse(text, null);
+      const parsed = safeParsePossiblyWrappedJson(text, null);
       const ok = applyImportedProgress(parsed);
       if (ok) notify('已從剪貼簿匯入進度。', 'good', 3200);
       else notify('匯入失敗：剪貼簿內容看起來不是有效的進度 JSON。', 'warn', 4200);
@@ -1639,7 +1668,7 @@ export default function App() {
       if (!confirmOverwrite) return;
 
       const text = await file.text();
-      const parsed = safeParse(text, null);
+      const parsed = safeParsePossiblyWrappedJson(text, null);
       const ok = applyImportedProgress(parsed);
       if (ok) notify('已從檔案匯入進度。', 'good', 3200);
       else notify('匯入失敗：檔案內容看起來不是有效的進度 JSON。', 'warn', 4200);
@@ -1741,7 +1770,7 @@ export default function App() {
       if (!confirmOverwrite) return;
 
       const text = await file.text();
-      const parsed = safeParse(text, null);
+      const parsed = safeParsePossiblyWrappedJson(text, null);
       const ok = applyImportedProgress(parsed);
       if (ok) notify('已從拖放檔案匯入進度。', 'good', 3200);
       else notify('匯入失敗：檔案內容看起來不是有效的進度 JSON。', 'warn', 4200);
