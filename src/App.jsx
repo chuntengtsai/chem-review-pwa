@@ -1261,6 +1261,7 @@ export default function App() {
     if (deployedAt) lines.push(`最後部署：${deployedAt}`);
     if (APP_VERSION) lines.push(`版本：v${APP_VERSION}`);
     if (savedAt) lines.push(`最後儲存（台北）：${formatLocalTime(savedAt)}`);
+    if (lastExportedAt) lines.push(`上次匯出備份（JSON）（台北）：${formatLocalTime(lastExportedAt)}`);
 
     if (!plan?.length) {
       lines.push('尚未產生 7 日路徑（請先完成診斷）。');
