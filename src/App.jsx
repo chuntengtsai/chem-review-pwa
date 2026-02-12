@@ -1595,7 +1595,13 @@ export default function App() {
     lines.push(`今天：Day ${dayIndex + 1} ${todaySkill?.name || todaySid || '—'} ${todayIsDone ? '✅' : '⬜'}`);
 
     if (nextIncompleteDay !== null) {
-      lines.push(`下一個未完成：Day ${nextIncompleteDay + 1}`);
+      const sid = plan?.[nextIncompleteDay];
+      const s = SKILLS.find((x) => x.id === sid);
+      const p = dayProgress?.[nextIncompleteDay] || {};
+      const concept = p.conceptDone ? '✅' : '⬜';
+      const practice = p.practiceDone ? '✅' : '⬜';
+      lines.push(`下一個未完成：Day ${nextIncompleteDay + 1} ${s?.name || sid || '—'}`);
+      lines.push(`建議下一步：概念 ${concept}／練習 ${practice}`);
     }
 
     lines.push('');
