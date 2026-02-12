@@ -2757,15 +2757,20 @@ export default function App() {
       ) : null}
 
       {!storageWritable ? (
-        <div
-          className="fixed bottom-28 left-3 z-50 rounded-full border border-amber-300/20 bg-amber-500/10 px-3 py-1 text-[11px] text-amber-50/90 backdrop-blur"
+        <button
+          type="button"
+          className="fixed bottom-28 left-3 z-50 rounded-full border border-amber-300/20 bg-amber-500/10 px-3 py-1 text-[11px] text-amber-50/90 backdrop-blur hover:bg-amber-500/15"
           role="status"
           aria-live="polite"
           aria-atomic="true"
-          title="偵測到瀏覽器禁止 localStorage（例如隱私模式）。請用「匯出進度」備份。"
+          aria-label="無法自動儲存：點此立即匯出進度備份（JSON）"
+          title="偵測到瀏覽器禁止 localStorage（例如隱私模式）。點一下立即『匯出進度（JSON）』備份。"
+          onClick={() => {
+            exportProgress()?.catch?.(() => null);
+          }}
         >
-          無法自動儲存：請匯出備份
-        </div>
+          無法自動儲存：點此匯出備份
+        </button>
       ) : null}
 
       {toast?.msg ? (
