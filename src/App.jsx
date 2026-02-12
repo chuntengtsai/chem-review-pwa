@@ -239,8 +239,33 @@ function safeParsePossiblyWrappedJson(raw, fallback) {
     if (start < 0) continue;
 
     let depth = 0;
+    let inString = false;
+    let escaped = false;
+
     for (let i = start; i < text.length; i++) {
       const ch = text[i];
+
+      // Track JSON strings so braces/brackets inside strings don't break balancing.
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (ch === '\\') {
+          escaped = true;
+        } else if (ch === '"') {
+          inString = false;
+        }
+
+        // Still apply the scan limit even when inside a string.
+        if (i - start > 2_000_000) break;
+        continue;
+      }
+
+      if (ch === '"') {
+        inString = true;
+        if (i - start > 2_000_000) break;
+        continue;
+      }
+
       if (ch === pair.open) depth += 1;
       else if (ch === pair.close) depth -= 1;
 
