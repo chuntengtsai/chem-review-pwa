@@ -48,3 +48,21 @@ The app shows these in the bottom-right “最後部署 / vX.Y.Z” badge.
 
 - This repo is intentionally an MVP; the question bank is currently a small demo set.
 - The PWA install button only appears when the browser fires `beforeinstallprompt` (mostly Chromium-based browsers).
+
+## Handy UX (MVP quality-of-life)
+
+- **Diagnostic keyboard shortcuts (desktop):**
+  - `1–4` or `A–D`: choose answer
+  - `←/→`: previous/next question (→ requires answered)
+  - `Enter`: next / submit at the end
+  - `C`: clear current answer
+  - `J`: jump to first unanswered
+  - `?` or `H`: open shortcut help
+  - `Esc`: close help / exit diagnostic
+
+- **Progress import options:**
+  - Import from clipboard (when permissions allow)
+  - Import from a JSON file
+  - **Drag & drop** an exported progress JSON anywhere on the page (desktop)
+
+- **Backup tip:** if localStorage is unavailable (privacy mode / disabled), the app will show a warning banner and you should regularly use **Export progress (JSON)**.
