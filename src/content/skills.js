@@ -732,6 +732,9 @@ export function validateSkillsContent(skills = SKILLS) {
       }
       if (seenSkillIds.has(sid)) errors.push(`Duplicate skill id: ${sid}`);
       seenSkillIds.add(sid);
+
+      const name = String(s?.name || '');
+      if (!name) errors.push(`Skill ${sid} is missing a name.`);
     }
 
     const seenQids = new Set();
@@ -750,6 +753,44 @@ export function validateSkillsContent(skills = SKILLS) {
           }
           if (seenQids.has(qid)) errors.push(`Duplicate question id: ${qid}`);
           seenQids.add(qid);
+
+          const kind = String(q?.kind || '');
+          const stem = String(q?.stem || '');
+          if (!kind) errors.push(`Question ${qid} is missing kind.`);
+          if (!stem) errors.push(`Question ${qid} is missing stem.`);
+
+          if (kind === 'mc') {
+            const choices = Array.isArray(q?.choices) ? q.choices : null;
+            if (!choices || choices.length < 2) {
+              errors.push(`Question ${qid} (mc) must have 2+ choices.`);
+            } else {
+              for (let i = 0; i < choices.length; i++) {
+                if (!String(choices[i] ?? '').trim()) errors.push(`Question ${qid} (mc) has an empty choice at index ${i}.`);
+              }
+            }
+
+            const ans = q?.answer;
+            if (typeof ans !== 'number' || !Number.isInteger(ans)) {
+              errors.push(`Question ${qid} (mc) answer must be an integer index.`);
+            } else if (choices && (ans < 0 || ans >= choices.length)) {
+              errors.push(`Question ${qid} (mc) answer index out of range: ${ans} (choices=${choices.length}).`);
+            }
+          }
+
+          const expl = q?.explanation;
+          if (expl !== undefined && !String(expl ?? '').trim()) {
+            errors.push(`Question ${qid} has an empty explanation (either omit it or fill it).`);
+          }
+
+          const tags = q?.wrongReasonTags;
+          if (tags !== undefined) {
+            if (!Array.isArray(tags)) errors.push(`Question ${qid} wrongReasonTags must be an array if present.`);
+            else {
+              for (const t of tags) {
+                if (!String(t ?? '').trim()) errors.push(`Question ${qid} has an empty wrongReasonTags entry.`);
+              }
+            }
+          }
         }
       }
     }
