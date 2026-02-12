@@ -1469,7 +1469,8 @@ export default function App() {
 
     const parsed = safeParse(raw, null);
     const ok = applyImportedProgress(parsed);
-    if (ok) window.alert('已匯入進度。');
+    if (ok) notify('已匯入進度。', 'good', 3200);
+    else notify('匯入失敗：請確認內容是有效的進度 JSON。', 'warn', 4200);
   }
 
   async function importProgressFromClipboard() {
@@ -1486,8 +1487,8 @@ export default function App() {
 
       const parsed = safeParse(text, null);
       const ok = applyImportedProgress(parsed);
-      if (ok) window.alert('已從剪貼簿匯入進度。');
-      else window.alert('匯入失敗：剪貼簿內容看起來不是有效的進度 JSON。');
+      if (ok) notify('已從剪貼簿匯入進度。', 'good', 3200);
+      else notify('匯入失敗：剪貼簿內容看起來不是有效的進度 JSON。', 'warn', 4200);
     } catch {
       // Permission denied / unsupported browser.
       importProgressViaPrompt();
@@ -1515,7 +1516,8 @@ export default function App() {
       const text = await file.text();
       const parsed = safeParse(text, null);
       const ok = applyImportedProgress(parsed);
-      if (ok) window.alert('已從檔案匯入進度。');
+      if (ok) notify('已從檔案匯入進度。', 'good', 3200);
+      else notify('匯入失敗：檔案內容看起來不是有效的進度 JSON。', 'warn', 4200);
     } catch {
       window.alert('匯入失敗：請確認檔案是先前匯出的 JSON。');
     } finally {
