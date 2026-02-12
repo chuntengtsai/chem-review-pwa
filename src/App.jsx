@@ -818,6 +818,25 @@ export default function App() {
     }
   }, [storageWritable, answeredCount, plan.length, notify]);
 
+  // Extra guard: if we cannot persist (private mode) and the user has progress,
+  // warn before closing/reloading so they have a chance to export a backup.
+  useEffect(() => {
+    if (storageWritable) return;
+    const hasProgress = answeredCount > 0 || plan.length > 0;
+    if (!hasProgress) return;
+
+    function onBeforeUnload(e) {
+      // Modern browsers ignore custom strings but still show a generic confirmation dialog.
+      e.preventDefault();
+      // @ts-ignore - returnValue is required by some browsers.
+      e.returnValue = '';
+      return '';
+    }
+
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [storageWritable, answeredCount, plan.length]);
+
   const stepState = useMemo(() => {
     const diagDone = plan.length > 0; // plan exists only after submit
     const inDiag = view === 'diagnostic';
