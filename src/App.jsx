@@ -1258,6 +1258,38 @@ export default function App() {
           return;
         }
 
+        // R: reveal next unrevealed practice answer (and jump)
+        // Shift+R: toggle show/hide all practice answers
+        if (k === 'r') {
+          if (!practiceQs?.length) return;
+          e.preventDefault();
+
+          if (e.shiftKey) {
+            setRevealed((p) => {
+              const next = { ...(p || {}) };
+              for (const q of practiceQs) next[q.id] = !allPracticeRevealed;
+              return next;
+            });
+            return;
+          }
+
+          const q = firstUnrevealedPractice;
+          if (!q) {
+            notify('本日練習題答案都已顯示。', 'info', 2000);
+            return;
+          }
+
+          setRevealed((p) => ({ ...p, [q.id]: true }));
+          window.setTimeout?.(() => {
+            try {
+              document.getElementById(`pq_${safeDomId(q.id)}`)?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' });
+            } catch {
+              // ignore
+            }
+          }, 0);
+          return;
+        }
+
         if (k === '1') {
           e.preventDefault();
           setDayProgress((p) => ({
@@ -1320,7 +1352,7 @@ export default function App() {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [view, showShortcuts, plan?.length, dayIndex, dayProgress, allPracticeRevealed, nextIncompleteDay]);
+  }, [view, showShortcuts, plan?.length, dayIndex, dayProgress, allPracticeRevealed, nextIncompleteDay, practiceQs, firstUnrevealedPractice, notify]);
 
   // Keyboard shortcuts (desktop-friendly):
   // - 1-4 or A-D: choose option
@@ -2224,6 +2256,8 @@ export default function App() {
                       <li>• N：跳到下一個未完成</li>
                       <li>• 1：切換「概念」完成</li>
                       <li>• 2：切換「練習」完成（標記完成前需先把答案都看過）</li>
+                      <li>• R：顯示下一題尚未顯示的答案（並跳到該題）</li>
+                      <li>• Shift+R：全部顯示 / 全部隱藏答案</li>
                     </ul>
                   </>
                 ) : null}
