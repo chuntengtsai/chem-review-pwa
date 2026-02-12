@@ -1229,6 +1229,7 @@ export default function App() {
       // - ←/→: previous/next day
       // - 1: toggle Concept done
       // - 2: toggle Practice done (requires all answers revealed when marking as done)
+      // - N: jump to next incomplete day
       if (view === 'task') {
         if (e.key === 'ArrowLeft') {
           if (plan?.length) {
@@ -1252,6 +1253,14 @@ export default function App() {
             ...p,
             [dayIndex]: { ...(p?.[dayIndex] || {}), conceptDone: !p?.[dayIndex]?.conceptDone }
           }));
+          return;
+        }
+
+        if (k === 'n') {
+          if (nextIncompleteDay !== null && typeof nextIncompleteDay === 'number' && plan?.length) {
+            e.preventDefault();
+            setDayIndex(nextIncompleteDay);
+          }
           return;
         }
 
@@ -1300,7 +1309,7 @@ export default function App() {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [view, showShortcuts, plan?.length, dayIndex, dayProgress, allPracticeRevealed]);
+  }, [view, showShortcuts, plan?.length, dayIndex, dayProgress, allPracticeRevealed, nextIncompleteDay]);
 
   // Keyboard shortcuts (desktop-friendly):
   // - 1-4 or A-D: choose option
@@ -2178,6 +2187,7 @@ export default function App() {
                     <div className="mt-4 text-xs font-semibold text-white/65">今日任務（Task）</div>
                     <ul className="mt-2 grid gap-2 text-sm text-white/75">
                       <li>• ← / →：上一天 / 下一天</li>
+                      <li>• N：跳到下一個未完成</li>
                       <li>• 1：切換「概念」完成</li>
                       <li>• 2：切換「練習」完成（標記完成前需先把答案都看過）</li>
                     </ul>
