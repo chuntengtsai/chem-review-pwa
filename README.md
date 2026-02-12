@@ -60,6 +60,11 @@ The app shows these in the bottom-right “最後部署 / vX.Y.Z” badge.
   - `?` or `H`: open shortcut help
   - `Esc`: close help / exit diagnostic
 
+- **Global shortcuts (desktop, outside diagnostic):**
+  - `P`: export progress JSON
+  - `S`: export share summary (text)
+  - `I`: import progress from clipboard (falls back to paste prompt if permissions disallow)
+
 - **Progress import options:**
   - Import from clipboard (when permissions allow)
   - Import from a JSON file

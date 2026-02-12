@@ -326,6 +326,11 @@ export default function App() {
   const didAutoJumpToNextIncompleteRef = useRef(false);
   const skipNextPersistRef = useRef(false);
 
+  // Keep global shortcut handlers fresh without re-registering listeners on every render.
+  const shortcutFnsRef = useRef(
+    /** @type {{ exportProgress?: Function, exportShareSummary?: Function, importProgressFromClipboard?: Function }} */ ({})
+  );
+
   // Keep a stable seed basis so practice shuffles don't change just because we auto-save.
   const initialSavedAtRef = useRef(typeof persisted?.savedAt === 'string' ? persisted.savedAt : '');
 
@@ -996,6 +1001,53 @@ export default function App() {
       // ignore
     }
   }, [view, dayIndex]);
+
+  // Keep shortcut function refs up to date (so key handlers always call the latest closures).
+  shortcutFnsRef.current.exportProgress = exportProgress;
+  shortcutFnsRef.current.exportShareSummary = exportShareSummary;
+  shortcutFnsRef.current.importProgressFromClipboard = importProgressFromClipboard;
+
+  // Global keyboard shortcuts (desktop-friendly):
+  // - P: export progress JSON
+  // - S: export share summary
+  // - I: import progress from clipboard (or prompt fallback)
+  // (kept disabled in diagnostic view to avoid conflicts with answer shortcuts)
+  useEffect(() => {
+    if (view === 'diagnostic') return;
+
+    function onKeyDown(e) {
+      // avoid interfering with browser/OS shortcuts
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      // don't hijack keystrokes when user is typing in a form element
+      const t = e.target;
+      const tag = String(t?.tagName || '').toUpperCase();
+      if (t?.isContentEditable || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      const k = String(e.key || '').toLowerCase();
+
+      if (k === 'p') {
+        e.preventDefault();
+        shortcutFnsRef.current.exportProgress?.()?.catch?.(() => null);
+        return;
+      }
+
+      if (k === 's') {
+        e.preventDefault();
+        shortcutFnsRef.current.exportShareSummary?.()?.catch?.(() => null);
+        return;
+      }
+
+      if (k === 'i') {
+        e.preventDefault();
+        shortcutFnsRef.current.importProgressFromClipboard?.()?.catch?.(() => null);
+        return;
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [view]);
 
   // Keyboard shortcuts (desktop-friendly):
   // - 1-4 or A-D: choose option
