@@ -1744,9 +1744,11 @@ export default function App() {
     return out;
   }
   function applyImportedProgress(parsed) {
+    // Return a tri-state so callers can distinguish user-cancel vs true errors.
+    // 'ok' | 'cancelled' | 'error'
     if (!parsed || typeof parsed !== 'object') {
       window.alert('格式不正確：不是 JSON 物件');
-      return false;
+      return 'error';
     }
 
     // Version warning (keep permissive: still allow importing older/newer exports).
@@ -1756,7 +1758,7 @@ export default function App() {
       const ok = window.confirm(
         `這份進度檔的版本是 v${importedVersion}（目前 App 預期 v1）。仍要嘗試匯入嗎？\n\n（若匯入後顯示異常，可按「重置進度」並用新版重新匯出/匯入。）`
       );
-      if (!ok) return false;
+      if (!ok) return 'cancelled';
     }
 
     // Minimal validation (keep it permissive)
@@ -1793,7 +1795,7 @@ export default function App() {
             (droppedAnswers > 0 ? `- 已略過 ${droppedAnswers} 個作答記錄\n` : '') +
             `\n仍要繼續匯入嗎？`
         );
-        if (!ok) return false;
+        if (!ok) return 'cancelled';
       }
     } catch {
       // ignore
@@ -1836,7 +1838,7 @@ export default function App() {
     setStorageWritable(wrote);
 
     setView(nextPlan.length > 0 ? 'result' : 'home');
-    return true;
+    return 'ok';
   }
 
   function summarizeImportedProgressForConfirm(parsed) {
@@ -1891,8 +1893,9 @@ export default function App() {
     const confirmOverwrite = confirmImportOverwrite({ sourceLabel: '「貼上」', parsed });
     if (!confirmOverwrite) return;
 
-    const ok = applyImportedProgress(parsed);
-    if (ok) notify('已匯入進度。', 'good', 3200);
+    const res = applyImportedProgress(parsed);
+    if (res === 'ok') notify('已匯入進度。', 'good', 3200);
+    else if (res === 'cancelled') notify('已取消匯入。', 'info', 2000);
     else notify('匯入失敗：請確認內容是有效的進度 JSON。', 'warn', 4200);
   }
 
@@ -1914,8 +1917,9 @@ export default function App() {
       const confirmOverwrite = confirmImportOverwrite({ sourceLabel: '「剪貼簿」', parsed });
       if (!confirmOverwrite) return;
 
-      const ok = applyImportedProgress(parsed);
-      if (ok) notify('已從剪貼簿匯入進度。', 'good', 3200);
+      const res = applyImportedProgress(parsed);
+      if (res === 'ok') notify('已從剪貼簿匯入進度。', 'good', 3200);
+      else if (res === 'cancelled') notify('已取消匯入。', 'info', 2000);
       else notify('匯入失敗：剪貼簿內容看起來不是有效的進度 JSON。', 'warn', 4200);
     } catch {
       // Permission denied / unsupported browser.
@@ -1946,8 +1950,9 @@ export default function App() {
       const confirmOverwrite = confirmImportOverwrite({ sourceLabel: `「檔案：${file.name}」`, parsed });
       if (!confirmOverwrite) return;
 
-      const ok = applyImportedProgress(parsed);
-      if (ok) notify('已從檔案匯入進度。', 'good', 3200);
+      const res = applyImportedProgress(parsed);
+      if (res === 'ok') notify('已從檔案匯入進度。', 'good', 3200);
+      else if (res === 'cancelled') notify('已取消匯入。', 'info', 2000);
       else notify('匯入失敗：檔案內容看起來不是有效的進度 JSON。', 'warn', 4200);
     } catch {
       window.alert('匯入失敗：請確認檔案是先前匯出的 JSON。');
@@ -2055,8 +2060,9 @@ export default function App() {
       const confirmOverwrite = confirmImportOverwrite({ sourceLabel: `「拖放檔案：${file.name}」`, parsed });
       if (!confirmOverwrite) return;
 
-      const ok = applyImportedProgress(parsed);
-      if (ok) notify('已從拖放檔案匯入進度。', 'good', 3200);
+      const res = applyImportedProgress(parsed);
+      if (res === 'ok') notify('已從拖放檔案匯入進度。', 'good', 3200);
+      else if (res === 'cancelled') notify('已取消匯入。', 'info', 2000);
       else notify('匯入失敗：檔案內容看起來不是有效的進度 JSON。', 'warn', 4200);
     } catch {
       notify('匯入失敗：請確認檔案是先前匯出的 JSON。', 'warn', 4200);
