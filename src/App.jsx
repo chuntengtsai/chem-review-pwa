@@ -352,6 +352,12 @@ export default function App() {
     return typeof s?.savedAt === 'string' ? s.savedAt : '';
   });
 
+  // backup hygiene: track when the user last exported progress (JSON)
+  const [lastExportedAt, setLastExportedAt] = useState(() => {
+    const s = persisted;
+    return typeof s?.lastExportedAt === 'string' ? s.lastExportedAt : '';
+  });
+
   // localStorage might be disabled (Safari private mode / strict privacy settings).
   // Track whether we can actually persist so we can warn the user.
   // Default to true but probe on mount to give immediate feedback.
@@ -525,6 +531,7 @@ export default function App() {
           skipNextPersistRef.current = true;
 
           setSavedAt('');
+          setLastExportedAt('');
           setView('home');
           setDiagIndex(0);
           setAnswers({});
@@ -556,6 +563,7 @@ export default function App() {
         setAutoNext(typeof next.autoNext === 'boolean' ? next.autoNext : true);
         setShufflePractice(typeof next.shufflePractice === 'boolean' ? next.shufflePractice : false);
         setSavedAt(typeof next.savedAt === 'string' ? next.savedAt : '');
+        setLastExportedAt(typeof next.lastExportedAt === 'string' ? next.lastExportedAt : '');
         setStorageWritable(true);
       } catch {
         // ignore
@@ -725,7 +733,8 @@ export default function App() {
       revealed,
       autoNext,
       shufflePractice,
-      savedAt: new Date().toISOString()
+      savedAt: new Date().toISOString(),
+      lastExportedAt: lastExportedAt || ''
     };
 
     lastPersistPayloadRef.current = payload;
@@ -737,7 +746,7 @@ export default function App() {
     return () => {
       if (t) window.clearTimeout?.(t);
     };
-  }, [plan, dayIndex, answers, dayProgress, revealed, autoNext, shufflePractice, persistNow]);
+  }, [plan, dayIndex, answers, dayProgress, revealed, autoNext, shufflePractice, lastExportedAt, persistNow]);
 
   // If the page is backgrounded/closed before the debounce fires (common on mobile),
   // flush the latest state so progress isn't lost.
@@ -817,6 +826,24 @@ export default function App() {
       notify('偵測到無法自動儲存進度：建議現在就「匯出進度」備份（JSON）。', 'warn', 4200);
     }
   }, [storageWritable, answeredCount, plan.length, notify]);
+
+  // Gentle nudge: if storage works but user hasn't exported yet, suggest making a backup once they have meaningful progress.
+  const didNudgeBackupRef = useRef(false);
+  useEffect(() => {
+    if (didNudgeBackupRef.current) return;
+    if (!storageWritable) return; // already handled by the stronger warning above
+
+    const hasProgress = answeredCount > 0 || plan.length > 0;
+    if (!hasProgress) return;
+
+    if (lastExportedAt) return;
+
+    // Avoid nudging too early (reduce annoyance): wait until they answered a few questions or already generated a plan.
+    if (plan.length === 0 && answeredCount < 8) return;
+
+    didNudgeBackupRef.current = true;
+    notify('小提醒：建議先「匯出進度（JSON）」做備份，避免換手機/清快取後不見。', 'info', 3600);
+  }, [storageWritable, answeredCount, plan.length, lastExportedAt, notify]);
 
   // Extra guard: if we cannot persist (private mode) and the user has progress,
   // warn before closing/reloading so they have a chance to export a backup.
@@ -1319,9 +1346,18 @@ export default function App() {
       revealed,
       autoNext,
       shufflePractice,
-      savedAt: savedAt || undefined
+      savedAt: savedAt || undefined,
+      lastExportedAt: nowIso
     };
     const text = JSON.stringify(payload, null, 2);
+
+    const markExported = () => {
+      try {
+        setLastExportedAt(nowIso);
+      } catch {
+        // ignore
+      }
+    };
 
     // Prefer native share sheet on mobile; fall back to clipboard / download.
     // Use a timestamped filename to avoid overwriting duplicates in chat apps / download managers.
@@ -1331,20 +1367,26 @@ export default function App() {
       filename: `chem-review-progress_${ts}.json`,
       mimeType: 'application/json'
     });
-    if (shared) return;
+    if (shared) {
+      markExported();
+      return;
+    }
 
     const ok = await copyToClipboard(text);
     if (ok) {
+      markExported();
       notify('已複製進度 JSON 到剪貼簿。', 'good');
       return;
     }
 
     const downloaded = downloadText({ filename: `chem-review-progress_${ts}.json`, text });
     if (downloaded) {
+      markExported();
       notify('你的瀏覽器不允許自動複製。我已改用「下載檔案」備份進度（JSON）。', 'info', 3200);
       return;
     }
 
+    markExported();
     window.prompt('你的瀏覽器不允許自動複製/下載。請手動複製以下文字：', text);
   }
 
@@ -1477,6 +1519,9 @@ export default function App() {
     // If the export didn't include savedAt (older versions), treat the import as a fresh save.
     const effectiveSavedAt = importedSavedAt || new Date().toISOString();
 
+    // Optional metadata: when the user last exported progress (for backup nudges).
+    const importedLastExportedAt = typeof parsed.lastExportedAt === 'string' ? parsed.lastExportedAt : '';
+
     if (!nextPlan) {
       window.alert('格式不正確：plan 必須是陣列');
       return false;
@@ -1517,6 +1562,7 @@ export default function App() {
     setAutoNext(nextAutoNext);
     setShufflePractice(nextShufflePractice);
     setSavedAt(effectiveSavedAt);
+    setLastExportedAt(importedLastExportedAt);
 
     // Persist immediately (keep storage consistent with the clamped in-memory state)
     const wrote = storageSet(
@@ -1529,7 +1575,8 @@ export default function App() {
         revealed: nextRevealed,
         autoNext: nextAutoNext,
         shufflePractice: nextShufflePractice,
-        savedAt: effectiveSavedAt
+        savedAt: effectiveSavedAt,
+        lastExportedAt: importedLastExportedAt
       })
     );
     setStorageWritable(wrote);
@@ -1718,6 +1765,7 @@ export default function App() {
     const removed = storageRemove(STORAGE_KEY);
     setStorageWritable(removed);
     setSavedAt('');
+    setLastExportedAt('');
     setView('home');
     setDiagIndex(0);
     setAnswers({});
