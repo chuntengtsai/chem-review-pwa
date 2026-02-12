@@ -1668,6 +1668,9 @@ export default function App() {
     setAutoNext(nextAutoNext);
     setShufflePractice(nextShufflePractice);
     setSavedAt(effectiveSavedAt);
+    // Keep practice shuffle seeds consistent with the newly imported state.
+    // (initialSavedAtRef is used as a stable seed basis across refreshes/autosaves.)
+    initialSavedAtRef.current = effectiveSavedAt;
     setLastExportedAt(importedLastExportedAt);
 
     // Persist immediately (keep storage consistent with the clamped in-memory state)
@@ -1930,6 +1933,8 @@ export default function App() {
     const removed = storageRemove(STORAGE_KEY);
     setStorageWritable(removed);
     setSavedAt('');
+    // Reset seed basis so a fresh start doesn't inherit old shuffle order.
+    initialSavedAtRef.current = '';
     setLastExportedAt('');
     setView('home');
     setDiagIndex(0);
