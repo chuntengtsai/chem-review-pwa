@@ -1388,6 +1388,16 @@ export default function App() {
         shortcutFnsRef.current.importProgressFromClipboard?.()?.catch?.(() => null);
         return;
       }
+
+      if (k === 't') {
+        e.preventDefault();
+        try {
+          window.scrollTo({ top: 0, behavior: scrollBehavior() });
+        } catch {
+          // ignore
+        }
+        return;
+      }
     }
 
     window.addEventListener('keydown', onKeyDown);
