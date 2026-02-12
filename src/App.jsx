@@ -404,6 +404,7 @@ export default function App() {
   const [diagIndex, setDiagIndex] = useState(0);
 
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showIosInstallHelp, setShowIosInstallHelp] = useState(false);
 
   // QoL: allow importing an exported progress JSON by drag & drop (desktop)
   const [dragImportActive, setDragImportActive] = useState(false);
@@ -1210,9 +1211,10 @@ export default function App() {
       if (t?.isContentEditable || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
       // If the help modal is open, let Esc close it.
-      if (showShortcuts && e.key === 'Escape') {
+      if ((showShortcuts || showIosInstallHelp) && e.key === 'Escape') {
         e.preventDefault();
-        setShowShortcuts(false);
+        if (showShortcuts) setShowShortcuts(false);
+        if (showIosInstallHelp) setShowIosInstallHelp(false);
         return;
       }
 
@@ -1352,7 +1354,7 @@ export default function App() {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [view, showShortcuts, plan?.length, dayIndex, dayProgress, allPracticeRevealed, nextIncompleteDay, practiceQs, firstUnrevealedPractice, notify]);
+  }, [view, showShortcuts, showIosInstallHelp, plan?.length, dayIndex, dayProgress, allPracticeRevealed, nextIncompleteDay, practiceQs, firstUnrevealedPractice, notify]);
 
   // Keyboard shortcuts (desktop-friendly):
   // - 1-4 or A-D: choose option
@@ -2290,6 +2292,47 @@ export default function App() {
         </div>
       ) : null}
 
+      {showIosInstallHelp ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="iOS 加入主畫面說明"
+          onClick={() => setShowIosInstallHelp(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl border border-white/10 bg-zinc-950/95 p-5 text-white/85 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-xs tracking-widest text-white/50">iOS</div>
+                <div className="mt-1 text-base font-semibold">加入主畫面（Add to Home Screen）</div>
+                <div className="mt-1 text-xs text-white/55">iOS Safari 不支援自動跳出安裝提示，所以改用手動步驟。</div>
+              </div>
+              <button
+                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/75 hover:bg-white/10"
+                type="button"
+                onClick={() => setShowIosInstallHelp(false)}
+              >
+                關閉（Esc）
+              </button>
+            </div>
+
+            <ol className="mt-4 grid gap-2 text-sm text-white/75">
+              <li>1) 用 Safari 開啟本頁</li>
+              <li>2) 點底部的「分享」按鈕（方框＋上箭頭）</li>
+              <li>3) 向下滑，選「加入主畫面」</li>
+              <li>4)（可選）把名稱改成「化學覆習」，再按「加入」</li>
+            </ol>
+
+            <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3 text-xs text-white/65">
+              小提醒：若你是用 Chrome/Line/IG 內建瀏覽器開啟，請改用 Safari 才會看到「加入主畫面」。
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="mx-auto max-w-3xl px-5 py-10">
         <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
@@ -2432,11 +2475,7 @@ export default function App() {
                     <button
                       className="rounded-lg border border-emerald-300/20 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-50 hover:bg-emerald-500/15"
                       type="button"
-                      onClick={() => {
-                        window.alert(
-                          'iPhone/iPad 安裝方式：\n1) 用 Safari 開啟本頁\n2) 點「分享」按鈕\n3) 選「加入主畫面」\n\n（iOS Safari 目前不支援自動跳出安裝提示，所以這裡改用提示說明。）'
-                        );
-                      }}
+                      onClick={() => setShowIosInstallHelp(true)}
                       title="iOS Safari 不支援自動安裝提示；點這裡看加入主畫面的方式"
                     >
                       加入主畫面（iOS）
