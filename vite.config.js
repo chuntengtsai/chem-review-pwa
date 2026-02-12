@@ -54,7 +54,7 @@ export default defineConfig(({ mode }) => {
           ]
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,svg,png,ico,txt}'],
+          globPatterns: ['**/*.{js,css,html,svg,png,ico,txt,webmanifest}'],
           // Keep SW caches tidy across version upgrades.
           // (Without this, old precache entries can linger in some browser flows.)
           cleanupOutdatedCaches: true,
