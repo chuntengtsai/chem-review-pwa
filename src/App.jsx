@@ -121,7 +121,7 @@ function shuffledCopy(arr, seedStr) {
   return xs;
 }
 
-function Badge({ children, tone = 'neutral' }) {
+function Badge({ children, tone = 'neutral', onClick, title, ariaLabel, className }) {
   const toneCls =
     tone === 'good'
       ? 'border-emerald-300/30 bg-emerald-500/10 text-emerald-50'
@@ -130,8 +130,26 @@ function Badge({ children, tone = 'neutral' }) {
         : tone === 'info'
           ? 'border-cyan-300/30 bg-cyan-500/10 text-cyan-50'
           : 'border-white/10 bg-white/5 text-white/80';
+
+  const baseCls = cls(
+    'inline-flex items-center rounded-full border px-2 py-0.5 text-xs',
+    toneCls,
+    onClick ? 'cursor-pointer hover:bg-white/10' : '',
+    className
+  );
+
+  if (typeof onClick === 'function') {
+    return (
+      <button type="button" className={baseCls} title={title} aria-label={ariaLabel} onClick={onClick}>
+        {children}
+      </button>
+    );
+  }
+
   return (
-    <span className={cls('inline-flex items-center rounded-full border px-2 py-0.5 text-xs', toneCls)}>{children}</span>
+    <span className={baseCls} title={title} aria-label={ariaLabel}>
+      {children}
+    </span>
   );
 }
 
@@ -2399,7 +2417,14 @@ export default function App() {
           <div className="flex items-center gap-2">
             {!isOnline ? <Badge tone="warn">離線</Badge> : null}
             {!storageWritable ? (
-              <Badge tone="warn" title="你的瀏覽器可能停用了 localStorage（例如：隱私模式/嚴格追蹤防護）。進度可能無法自動保存。">
+              <Badge
+                tone="warn"
+                title="你的瀏覽器可能停用了 localStorage（例如：隱私模式/嚴格追蹤防護）。點一下立刻匯出進度（JSON）做備份。"
+                ariaLabel="無法儲存（點此匯出進度備份）"
+                onClick={() => {
+                  exportProgress()?.catch?.(() => null);
+                }}
+              >
                 無法儲存
               </Badge>
             ) : null}
