@@ -2102,8 +2102,27 @@ export default function App() {
   }
 
   function resetProgress() {
-    // keep minimal: clear persisted state + reset in-memory state
-    const ok = window.confirm('確定要重置進度？這會清除你的診斷結果與 7 日路徑。（建議先按「匯出進度」備份）');
+    // Keep minimal: clear persisted state + reset in-memory state.
+    // Small UX: tailor the confirmation message depending on whether the user has a recent backup.
+    const backupHint = (() => {
+      try {
+        if (!hasProgress) return '';
+
+        // If storage is not writable, a reset is extra risky because progress may already be fragile.
+        if (!storageWritable) {
+          return '\n\n注意：偵測到此環境可能無法自動儲存進度（例如無痕/隱私模式）。若你還沒先匯出備份，重置後可能無法復原。';
+        }
+
+        if (!backupDue) return '';
+
+        const last = lastExportedAt ? `上次備份（台北）：${formatLocalTime(lastExportedAt)}` : '尚未做過進度備份（JSON）';
+        return `\n\n提醒：${last}。建議先按「匯出進度（JSON）」備份，再重置。`;
+      } catch {
+        return '';
+      }
+    })();
+
+    const ok = window.confirm(`確定要重置進度？這會清除你的診斷結果與 7 日路徑。${backupHint}`);
     if (!ok) return;
 
     // Prevent the reactive "persist" effect from immediately re-writing an empty state
