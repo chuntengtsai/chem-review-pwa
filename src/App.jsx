@@ -1569,8 +1569,23 @@ export default function App() {
     const text = JSON.stringify(payload, null, 2);
 
     const markExported = () => {
+      // Persist the "lastExportedAt" stamp as eagerly as possible.
+      // On some mobile/PWA flows, the app can be backgrounded/killed right after opening the share sheet,
+      // so relying only on the debounced autosave can miss this update.
       try {
         setLastExportedAt(nowIso);
+      } catch {
+        // ignore
+      }
+
+      // Best-effort: patch localStorage immediately so backup nudges don't reappear after a reload.
+      try {
+        const curRaw = storageGet(STORAGE_KEY);
+        const cur = curRaw ? safeParse(curRaw, null) : null;
+        if (cur && typeof cur === 'object') {
+          cur.lastExportedAt = nowIso;
+          storageSet(STORAGE_KEY, JSON.stringify(cur));
+        }
       } catch {
         // ignore
       }
