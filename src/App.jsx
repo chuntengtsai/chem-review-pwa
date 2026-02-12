@@ -1398,6 +1398,9 @@ export default function App() {
     });
     if (shared) {
       markExported();
+      // On mobile share sheets, users may not get any obvious confirmation.
+      // Give a tiny non-blocking toast so they trust the backup happened.
+      notify('已開啟分享：進度備份（JSON）已準備好。', 'good', 2200);
       return;
     }
 
@@ -1433,7 +1436,11 @@ export default function App() {
       filename: `chem-review-summary_${ts}.txt`,
       mimeType: 'text/plain;charset=utf-8'
     });
-    if (shared) return;
+    if (shared) {
+      // Tiny confirmation for share sheets.
+      notify('已開啟分享：摘要已準備好。', 'good', 2000);
+      return;
+    }
 
     const ok = await copyToClipboard(text);
     if (ok) {
