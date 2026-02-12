@@ -1216,6 +1216,60 @@ export default function App() {
         return;
       }
 
+      // Task view shortcuts (desktop-friendly):
+      // - ←/→: previous/next day
+      // - 1: toggle Concept done
+      // - 2: toggle Practice done (requires all answers revealed when marking as done)
+      if (view === 'task') {
+        if (e.key === 'ArrowLeft') {
+          if (plan?.length) {
+            e.preventDefault();
+            setDayIndex((i) => Math.max(0, i - 1));
+          }
+          return;
+        }
+
+        if (e.key === 'ArrowRight') {
+          if (plan?.length) {
+            e.preventDefault();
+            setDayIndex((i) => Math.min((plan?.length || 1) - 1, i + 1));
+          }
+          return;
+        }
+
+        if (k === '1') {
+          e.preventDefault();
+          setDayProgress((p) => ({
+            ...p,
+            [dayIndex]: { ...(p?.[dayIndex] || {}), conceptDone: !p?.[dayIndex]?.conceptDone }
+          }));
+          return;
+        }
+
+        if (k === '2') {
+          e.preventDefault();
+          const cur = Boolean(dayProgress?.[dayIndex]?.practiceDone);
+          if (cur) {
+            setDayProgress((p) => ({
+              ...p,
+              [dayIndex]: { ...(p?.[dayIndex] || {}), practiceDone: false }
+            }));
+            return;
+          }
+
+          if (!allPracticeRevealed) {
+            window.alert('先把本日練習題答案都看過/對過（可用「全部顯示」），再標記完成。');
+            return;
+          }
+
+          setDayProgress((p) => ({
+            ...p,
+            [dayIndex]: { ...(p?.[dayIndex] || {}), practiceDone: true }
+          }));
+          return;
+        }
+      }
+
       if (k === 'p') {
         e.preventDefault();
         shortcutFnsRef.current.exportProgress?.()?.catch?.(() => null);
@@ -1237,7 +1291,7 @@ export default function App() {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [view, showShortcuts]);
+  }, [view, showShortcuts, plan?.length, dayIndex, dayProgress, allPracticeRevealed]);
 
   // Keyboard shortcuts (desktop-friendly):
   // - 1-4 or A-D: choose option
@@ -2107,6 +2161,17 @@ export default function App() {
                   <li>• Esc：關閉此視窗</li>
                   <li>• ? 或 H：打開此視窗</li>
                 </ul>
+
+                {view === 'task' ? (
+                  <>
+                    <div className="mt-4 text-xs font-semibold text-white/65">今日任務（Task）</div>
+                    <ul className="mt-2 grid gap-2 text-sm text-white/75">
+                      <li>• ← / →：上一天 / 下一天</li>
+                      <li>• 1：切換「概念」完成</li>
+                      <li>• 2：切換「練習」完成（標記完成前需先把答案都看過）</li>
+                    </ul>
+                  </>
+                ) : null}
 
                 <div className="mt-4 text-xs text-white/55">診斷頁還有更多快捷鍵（1–4、A–D、←/→、Enter...）。</div>
               </>
