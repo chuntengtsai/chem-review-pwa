@@ -3490,7 +3490,13 @@ export default function App() {
               try {
                 const fn = updateSWRef.current;
                 setNeedRefresh(false);
-                await fn?.(true);
+
+                if (typeof fn === 'function') {
+                  await fn(true);
+                } else {
+                  // Fallback: if we don't have an update handler, a normal reload often picks up the new assets.
+                  window.location.reload();
+                }
               } catch {
                 // if update fails, keep the hint so user can try again
                 setNeedRefresh(true);
