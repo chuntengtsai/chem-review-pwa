@@ -552,6 +552,10 @@ export default function App() {
     }
   }, []);
 
+  // Content validation: surface content/ID issues (duplicate ids, etc.) because they can corrupt progress storage.
+  // Keep this subtle but visible so we catch mistakes early even in production builds.
+  const [contentErrors, setContentErrors] = useState([]);
+
 
   useEffect(() => {
     return () => {
@@ -882,14 +886,23 @@ export default function App() {
 
   const allQuestions = useMemo(() => getAllDiagnosticQuestions(), []);
 
-  // Content sanity checks (DEV only): helps catch accidental duplicate ids that would corrupt progress storage.
+  // Content sanity checks: helps catch accidental duplicate ids that would corrupt progress storage.
   useEffect(() => {
-    if (!import.meta?.env?.DEV) return;
     const r = validateSkillsContent(SKILLS);
     if (!r.ok) {
-      console.warn('[chem-review-pwa] skills content validation failed:', r.errors);
+      const errs = Array.isArray(r.errors) ? r.errors.map((e) => String(e)) : ['Unknown content validation error'];
+      setContentErrors(errs);
+
+      if (import.meta?.env?.DEV) {
+        console.warn('[chem-review-pwa] skills content validation failed:', errs);
+      } else {
+        console.error('[chem-review-pwa] skills content validation failed:', errs);
+        notify(`題庫內容檢查失敗（${errs.length}）— 建議重新整理或更新版本。`, 'warn', 5000);
+      }
+    } else {
+      setContentErrors([]);
     }
-  }, []);
+  }, [notify]);
 
   const perSkill = useMemo(() => computeMastery(SKILLS, answers), [answers]);
   const weakTop3 = useMemo(() => {
@@ -3440,6 +3453,25 @@ export default function App() {
           }}
         >
           建議備份：匯出進度
+        </button>
+      ) : null}
+
+      {contentErrors?.length ? (
+        <button
+          type="button"
+          className="fixed bottom-36 left-3 z-50 rounded-full border border-rose-300/25 bg-rose-500/10 px-3 py-1 text-[11px] text-rose-50/90 backdrop-blur hover:bg-rose-500/15"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          aria-label={`題庫內容檢查失敗（${contentErrors.length}）：點此複製錯誤內容`}
+          title="題庫內容檢查失敗（可能有重複 id）。點一下複製錯誤內容，方便回報/修正。"
+          onClick={async () => {
+            const ok = await copyToClipboard(contentErrors.join('\n'));
+            if (ok) notify('已複製題庫錯誤內容到剪貼簿。', 'good');
+            else notify('複製失敗：請改用截圖或開啟 DevTools 查看 console。', 'warn', 3200);
+          }}
+        >
+          題庫錯誤：{contentErrors.length}（點此複製）
         </button>
       ) : null}
 
