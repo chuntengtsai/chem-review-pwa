@@ -20,6 +20,15 @@ npm install
 npm run dev
 ```
 
+### PWA service worker during dev (optional)
+
+By default, the service worker is **disabled in local dev** to avoid caching surprises.
+If you want to test PWA behavior locally:
+
+```bash
+PWA_DEV=true npm run dev
+```
+
 ## Build / preview
 
 ```bash
