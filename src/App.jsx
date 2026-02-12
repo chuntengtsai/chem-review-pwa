@@ -3385,7 +3385,9 @@ export default function App() {
                 // ignore
               }
             } else {
-              window.alert('你的瀏覽器不允許自動複製，請手動複製版本資訊。');
+              // Fallback: offer a manual copy prompt (useful on older iOS/Safari).
+              notify('你的瀏覽器不允許自動複製：已改用手動複製視窗。', 'warn', 2600);
+              window.prompt('請手動複製版本資訊：', buildInfoText);
             }
           }}
         >
