@@ -1704,10 +1704,10 @@ export default function App() {
   function hasFileTransfer(dt) {
     if (!dt) return false;
     try {
-      // Most browsers: types includes Files for file drags.
+      // Be conservative: only treat as a “file drag” when the browser explicitly says so.
+      // (Some browsers expose dt.items for text/URL drags too, which would create noisy overlays.)
       if (Array.isArray(dt.types) && dt.types.includes('Files')) return true;
       if (dt.types && typeof dt.types.contains === 'function' && dt.types.contains('Files')) return true;
-      if (dt.items && dt.items.length) return true;
       if (dt.files && dt.files.length) return true;
     } catch {
       // ignore
@@ -1747,6 +1747,10 @@ export default function App() {
   function onDragOverImport(e) {
     const dt = e?.dataTransfer;
     if (!hasFileTransfer(dt)) return;
+
+    // Best-effort: avoid showing the overlay for obviously-non-JSON file drags.
+    const f = firstDraggedFile(dt);
+    if (f && !isProbablyProgressJsonFile(f)) return;
 
     e.preventDefault();
     // Keep it sticky while hovering.
