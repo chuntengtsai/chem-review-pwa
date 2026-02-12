@@ -621,8 +621,9 @@ export default function App() {
     const prev = Boolean(prevOnlineRef.current);
     const cur = Boolean(isOnline);
 
-    // Only toast when transitioning from offline -> online.
+    // Only toast when transitioning between online/offline.
     if (!prev && cur) {
+      // Offline -> online
       setBackOnline(true);
 
       try {
@@ -636,6 +637,12 @@ export default function App() {
       } catch {
         // ignore
       }
+
+      // Also show a non-blocking toast (helps users notice when connectivity returns).
+      notify('已恢復連線。', 'info', 1800);
+    } else if (prev && !cur) {
+      // Online -> offline
+      notify('已離線：題庫與進度仍可用，但分享/更新可能受限。', 'warn', 2600);
     }
 
     prevOnlineRef.current = cur;
@@ -647,7 +654,7 @@ export default function App() {
         // ignore
       }
     };
-  }, [isOnline]);
+  }, [isOnline, notify]);
 
   useEffect(() => {
     let raf = 0;
