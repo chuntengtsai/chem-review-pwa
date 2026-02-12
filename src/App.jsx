@@ -1225,6 +1225,17 @@ export default function App() {
         return;
       }
 
+      // QoL: quick "scroll to top" shortcut (matches the floating button).
+      if (k === 't') {
+        e.preventDefault();
+        try {
+          window.scrollTo({ top: 0, behavior: scrollBehavior() });
+        } catch {
+          // ignore
+        }
+        return;
+      }
+
       // Task view shortcuts (desktop-friendly):
       // - ←/→: previous/next day
       // - 1: toggle Concept done
@@ -2183,6 +2194,7 @@ export default function App() {
                   <li>• P：匯出進度（JSON）</li>
                   <li>• S：匯出分享摘要（文字）</li>
                   <li>• I：從剪貼簿匯入進度（JSON）</li>
+                  <li>• T：回到頁面頂部</li>
                   <li>• ? 或 H：打開此視窗</li>
                 </ul>
               </>
@@ -2193,6 +2205,7 @@ export default function App() {
                   <li>• P：匯出進度（JSON）</li>
                   <li>• S：匯出分享摘要（文字）</li>
                   <li>• I：從剪貼簿匯入進度（JSON）</li>
+                  <li>• T：回到頁面頂部</li>
                   <li>• Esc：關閉此視窗</li>
                   <li>• ? 或 H：打開此視窗</li>
                 </ul>
