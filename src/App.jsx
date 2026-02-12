@@ -1515,6 +1515,17 @@ export default function App() {
     const deployedAt = formatBuildTime(BUILD_TIME);
     if (deployedAt) lines.push(`最後部署：${deployedAt}`);
     if (APP_VERSION) lines.push(`版本：v${APP_VERSION}`);
+
+    // Handy for debugging when users share a summary from different environments.
+    // (Standalone/PWA vs browser tab can affect install prompts, storage, and share behavior.)
+    try {
+      lines.push(`目前模式：${isStandalone ? '已安裝（standalone）' : '瀏覽器分頁'}`);
+      lines.push(`網路狀態：${isOnline ? '在線' : '離線'}`);
+      lines.push(`自動儲存：${storageWritable ? '可用' : '不可用（建議立刻匯出備份）'}`);
+    } catch {
+      // ignore
+    }
+
     if (savedAt) lines.push(`最後儲存（台北）：${formatLocalTime(savedAt)}`);
     if (lastExportedAt) lines.push(`上次匯出備份（JSON）（台北）：${formatLocalTime(lastExportedAt)}`);
 
