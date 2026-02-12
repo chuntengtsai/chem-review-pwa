@@ -1614,6 +1614,17 @@ export default function App() {
     const todayIsDone = Boolean(todayP.conceptDone && todayP.practiceDone);
     lines.push(`今天：Day ${dayIndex + 1} ${todaySkill?.name || todaySid || '—'} ${todayIsDone ? '✅' : '⬜'}`);
 
+    // Tiny detail that helps teachers/parents quickly see *what* is missing.
+    const todayConcept = todayP.conceptDone ? '✅' : '⬜';
+    const todayPractice = todayP.practiceDone ? '✅' : '⬜';
+    lines.push(`今日任務：概念 ${todayConcept}／練習 ${todayPractice}`);
+
+    // If practice questions exist, include how many answers have been revealed/checked.
+    // (This is usually a better proxy than just the done toggle.)
+    if (Array.isArray(practiceQs) && practiceQs.length > 0) {
+      lines.push(`今日練習題：已看答案 ${practiceRevealedCount}/${practiceQs.length}`);
+    }
+
     if (nextIncompleteDay !== null) {
       const sid = plan?.[nextIncompleteDay];
       const s = SKILLS.find((x) => x.id === sid);
