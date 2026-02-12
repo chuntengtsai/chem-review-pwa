@@ -209,7 +209,7 @@ function safeParse(json, fallback) {
 }
 
 // Some apps wrap shared JSON in extra text or code fences.
-// Try to recover by stripping fences and extracting the first {...} block.
+// Try to recover by stripping fences and extracting the first JSON object/array block.
 function safeParsePossiblyWrappedJson(raw, fallback) {
   const s = String(raw ?? '').trim();
   if (!s) return fallback;
@@ -226,12 +226,34 @@ function safeParsePossiblyWrappedJson(raw, fallback) {
   const unfencedDirect = safeParse(unfenced, null);
   if (unfencedDirect !== null) return unfencedDirect;
 
-  const start = unfenced.indexOf('{');
-  const end = unfenced.lastIndexOf('}');
-  if (start >= 0 && end > start) {
-    const slice = unfenced.slice(start, end + 1);
-    const sliced = safeParse(slice, null);
-    if (sliced !== null) return sliced;
+  // Last-chance recovery: find the first balanced {...} or [...] block.
+  // This makes imports more tolerant to chat apps that prepend/append explanations.
+  const text = unfenced;
+  const openers = [
+    { open: '{', close: '}' },
+    { open: '[', close: ']' }
+  ];
+
+  for (const pair of openers) {
+    const start = text.indexOf(pair.open);
+    if (start < 0) continue;
+
+    let depth = 0;
+    for (let i = start; i < text.length; i++) {
+      const ch = text[i];
+      if (ch === pair.open) depth += 1;
+      else if (ch === pair.close) depth -= 1;
+
+      if (depth === 0) {
+        const slice = text.slice(start, i + 1);
+        const parsed = safeParse(slice, null);
+        if (parsed !== null) return parsed;
+        break;
+      }
+
+      // Avoid pathological scans on gigantic clipboard contents.
+      if (i - start > 2_000_000) break;
+    }
   }
 
   return fallback;
