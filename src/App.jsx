@@ -838,6 +838,31 @@ export default function App() {
     return n;
   }, [allQuestions, answers]);
 
+  const hasProgress = answeredCount > 0 || (plan?.length || 0) > 0;
+
+  const daysSinceLastExport = useMemo(() => {
+    if (!lastExportedAt) return null;
+    try {
+      const t = new Date(lastExportedAt).getTime();
+      if (!Number.isFinite(t)) return null;
+      const now = Date.now();
+      const days = Math.floor((now - t) / (24 * 60 * 60 * 1000));
+      return days >= 0 ? days : 0;
+    } catch {
+      return null;
+    }
+  }, [lastExportedAt]);
+
+  // Gentle visual reminder: backups matter even when autosave works.
+  // Show when the user has progress but hasn't exported recently.
+  const backupDue = useMemo(() => {
+    if (!storageWritable) return false;
+    if (!hasProgress) return false;
+    if (!lastExportedAt) return true;
+    if (daysSinceLastExport == null) return true;
+    return daysSinceLastExport >= 7;
+  }, [storageWritable, hasProgress, lastExportedAt, daysSinceLastExport]);
+
   // If localStorage is not writable (private mode / strict privacy),
   // proactively remind users to export a backup once they start making progress.
   const didWarnNoStorageRef = useRef(false);
@@ -2978,6 +3003,25 @@ export default function App() {
           }}
         >
           無法自動儲存：點此匯出備份
+        </button>
+      ) : backupDue ? (
+        <button
+          type="button"
+          className="fixed bottom-28 right-3 z-50 rounded-full border border-cyan-300/20 bg-cyan-500/10 px-3 py-1 text-[11px] text-cyan-50/90 backdrop-blur hover:bg-cyan-500/15"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          aria-label="建議備份：點此匯出進度（JSON）"
+          title={
+            lastExportedAt
+              ? `上次備份已超過 ${daysSinceLastExport ?? '多'} 天。點一下『匯出進度（JSON）』做備份。`
+              : '尚未備份過。點一下『匯出進度（JSON）』做備份。'
+          }
+          onClick={() => {
+            exportProgress()?.catch?.(() => null);
+          }}
+        >
+          建議備份：匯出進度
         </button>
       ) : null}
 
