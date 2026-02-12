@@ -1665,7 +1665,7 @@ export default function App() {
       const file = e?.dataTransfer?.files?.[0];
       if (!file) return;
       if (!isProbablyProgressJsonFile(file)) {
-        window.alert('這看起來不是 JSON 檔。請拖放先前匯出的進度 .json。');
+        notify('這看起來不是 JSON 檔。請拖放先前匯出的進度 .json。', 'warn', 4200);
         return;
       }
 
@@ -1677,10 +1677,10 @@ export default function App() {
       const text = await file.text();
       const parsed = safeParse(text, null);
       const ok = applyImportedProgress(parsed);
-      if (ok) window.alert('已從拖放檔案匯入進度。');
-      else window.alert('匯入失敗：檔案內容看起來不是有效的進度 JSON。');
+      if (ok) notify('已從拖放檔案匯入進度。', 'good', 3200);
+      else notify('匯入失敗：檔案內容看起來不是有效的進度 JSON。', 'warn', 4200);
     } catch {
-      window.alert('匯入失敗：請確認檔案是先前匯出的 JSON。');
+      notify('匯入失敗：請確認檔案是先前匯出的 JSON。', 'warn', 4200);
     }
   }
 
