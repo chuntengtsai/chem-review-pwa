@@ -907,6 +907,26 @@ export default function App() {
     return SKILLS.find((s) => s.id === sid) || null;
   }, [plan, dayIndex]);
 
+  // Practice questions for the current day/skill.
+  // NOTE: these are referenced by global keyboard shortcuts (Task view),
+  // so they must be declared before those effects.
+  const practiceQs = useMemo(() => {
+    const base = getPracticeQuestionsForSkill(currentSkill?.id || '');
+    if (!shufflePractice) return base;
+
+    // Shuffle should be stable across refreshes (so "今天" doesn't feel random every open),
+    // but still differ by Day/Skill.
+    const seed = `${initialSavedAtRef.current || 'seed'}|${currentSkill?.id || ''}|day${dayIndex}`;
+    return shuffledCopy(base, seed);
+  }, [currentSkill?.id, shufflePractice, dayIndex]);
+
+  // If a skill has 0 practice questions (e.g., during MVP expansion), don't block users from marking practice as done.
+  // Treat "all revealed" as true when there is nothing to reveal.
+  const allPracticeRevealed = useMemo(() => practiceQs.every((q) => Boolean(revealed?.[q.id])), [practiceQs, revealed]);
+  const practiceRevealedCount = useMemo(() => practiceQs.filter((q) => Boolean(revealed?.[q.id])).length, [practiceQs, revealed]);
+
+  const firstUnrevealedPractice = useMemo(() => practiceQs.find((q) => !revealed?.[q.id]) || null, [practiceQs, revealed]);
+
   const answeredCount = useMemo(() => Object.keys(answers || {}).length, [answers]);
   const answeredPct = useMemo(() => {
     if (!allQuestions.length) return 0;
@@ -2163,23 +2183,6 @@ export default function App() {
     if (APP_VERSION) parts.push(`v${APP_VERSION}`);
     return parts.join(' · ');
   }, [buildLabel]);
-
-  const practiceQs = useMemo(() => {
-    const base = getPracticeQuestionsForSkill(currentSkill?.id || '');
-    if (!shufflePractice) return base;
-
-    // Shuffle should be stable across refreshes (so "今天" doesn't feel random every open),
-    // but still differ by Day/Skill.
-    const seed = `${initialSavedAtRef.current || 'seed'}|${currentSkill?.id || ''}|day${dayIndex}`;
-    return shuffledCopy(base, seed);
-  }, [currentSkill?.id, shufflePractice, dayIndex]);
-
-  // If a skill has 0 practice questions (e.g., during MVP expansion), don't block users from marking practice as done.
-  // Treat "all revealed" as true when there is nothing to reveal.
-  const allPracticeRevealed = useMemo(() => practiceQs.every((q) => Boolean(revealed?.[q.id])), [practiceQs, revealed]);
-  const practiceRevealedCount = useMemo(() => practiceQs.filter((q) => Boolean(revealed?.[q.id])).length, [practiceQs, revealed]);
-
-  const firstUnrevealedPractice = useMemo(() => practiceQs.find((q) => !revealed?.[q.id]) || null, [practiceQs, revealed]);
 
   return (
     <div
