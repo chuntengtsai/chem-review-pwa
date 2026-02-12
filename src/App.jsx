@@ -3541,8 +3541,8 @@ export default function App() {
                   ? 'border-cyan-300/20 bg-cyan-500/10 text-cyan-50/90'
                   : 'border-white/10 bg-white/5 text-white/85'
           )}
-          role="status"
-          aria-live="polite"
+          role={toast.tone === 'warn' ? 'alert' : 'status'}
+          aria-live={toast.tone === 'warn' ? 'assertive' : 'polite'}
           aria-atomic="true"
           aria-label="通知（點一下關閉）"
           title="點一下關閉"
