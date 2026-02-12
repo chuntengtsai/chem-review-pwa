@@ -1632,6 +1632,9 @@ export default function App() {
     // right after we remove localStorage (so reset truly clears).
     skipNextPersistRef.current = true;
 
+    // Also reset any "auto jump" behavior so a fresh start doesn't unexpectedly snap days.
+    didAutoJumpToNextIncompleteRef.current = false;
+
     const removed = storageRemove(STORAGE_KEY);
     setStorageWritable(removed);
     setSavedAt('');
@@ -1643,6 +1646,7 @@ export default function App() {
     setDayProgress({});
     setRevealed({});
     setAutoNext(true);
+    setShufflePractice(false);
   }
 
   const buildLabel = useMemo(() => formatBuildTime(BUILD_TIME), []);
